@@ -1,6 +1,6 @@
 <div align="center">
   <h1>🔗 LinkForge — Scalable URL Shortener</h1>
-  <p>A production-ready, highly scalable URL shortening service built with modern web technologies. Designed for performance, reliability, and security.</p>
+  <p>A high-performance URL shortening service designed with real-world backend architecture principles, focusing on caching, asynchronous processing, and scalable request handling.</p>
   
   <p>
     <img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi" alt="FastAPI" />
