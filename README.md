@@ -101,9 +101,9 @@ This command will spin up the following containers:
 ⚠️ Positioning (Honest)
 
 This project is not deployed at production scale, but is architected using patterns commonly used in real-world systems:
-Cache-first data access
-Asynchronous background processing
-Separation of read/write workloads
+-Cache-first data access
+-Asynchronous background processing
+-Separation of read/write workloads
 
 ---
 
