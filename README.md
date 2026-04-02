@@ -18,9 +18,9 @@
 Here is a glimpse of the premium, dark-mode focused UI built from scratch using strict CSS variables, glassmorphism, and dynamic animations.
 
 <div align="center">
-  <img src="screenshot/Screenshot%202026-04-02%20180734.png" alt="Dashboard View" width="800" style="border-radius:10px; margin-bottom:15px;" />
+    <img src="screenshot/Screenshot%202026-04-02%20181042.png" alt="Analytics View" width="800" style="border-radius:10px; margin-bottom:15px;" />
   <br/>
-  <img src="screenshot/Screenshot%202026-04-02%20181042.png" alt="Analytics View" width="800" style="border-radius:10px; margin-bottom:15px;" />
+    <img src="screenshot/Screenshot%202026-04-02%20180734.png" alt="Dashboard View" width="800" style="border-radius:10px; margin-bottom:15px;" />
   <br/>
   <img src="screenshot/Screenshot%202026-04-02%20181101.png" alt="Create Link View" width="800" style="border-radius:10px;" />
 </div>
