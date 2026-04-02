@@ -77,6 +77,13 @@ It will automatically:
 **🍎 For Mac/Linux Users (Manual):**
 Build and start all services using Docker Compose:
 
+⚠️ Positioning (Honest)
+
+This project is not deployed at production scale, but is architected using patterns commonly used in real-world systems:
+Cache-first data access
+Asynchronous background processing
+Separation of read/write workloads
+
 ```bash
 docker-compose up --build -d
 ```
