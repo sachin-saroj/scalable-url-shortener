@@ -89,14 +89,6 @@ This command will spin up the following containers:
 - `shortener-celery-beat` (Cron-like task scheduler)
 - `shortener-frontend` (React App at `http://localhost:5173`)
 
-### 3. Accessing the Application
-
-- **Web Dashboard**: [http://localhost:5173](http://localhost:5173) (Sign up, create links, and view analytics here)
-- **API Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs) (Interactive Swagger UI)
-- **Short Link Redirects**: `http://localhost:8000/{short_code}`
-
----
-
 ## 🛠️ Data Flow & Background Tasks
 
 1. **Shortening**: A user submits a URL via the UI. The FastAPI backend validates it, generates a Base62 hash (or uses a custom alias), saves it to PostgreSQL, and preemptively caches it in Redis.
