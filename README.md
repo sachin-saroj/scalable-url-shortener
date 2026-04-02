@@ -77,13 +77,6 @@ It will automatically:
 **🍎 For Mac/Linux Users (Manual):**
 Build and start all services using Docker Compose:
 
-⚠️ Positioning (Honest)
-
-This project is not deployed at production scale, but is architected using patterns commonly used in real-world systems:
-Cache-first data access
-Asynchronous background processing
-Separation of read/write workloads
-
 ```bash
 docker-compose up --build -d
 ```
@@ -103,6 +96,14 @@ This command will spin up the following containers:
 3. **Analytics**: The click event is immediately logged to the `clicks` table.
 4. **Aggregation**: `celery-beat` triggers an hourly task that aggregates raw clicks into the `daily_analytics` table for highly efficient dashboard querying.
 5. **Cleanup**: Expired URLs are safely deactivated and purged from the Redis cache by another recurring Celery task.
+
+---
+⚠️ Positioning (Honest)
+
+This project is not deployed at production scale, but is architected using patterns commonly used in real-world systems:
+Cache-first data access
+Asynchronous background processing
+Separation of read/write workloads
 
 ---
 
