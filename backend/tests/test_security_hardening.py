@@ -26,12 +26,16 @@ def test_settings_validation():
         )
     assert "SECRET_KEY must be changed" in str(exc_info.value)
 
-    # If DATABASE_URL is missing
+    # If DATABASE_URL is missing and cannot be constructed
     with pytest.raises(RuntimeError) as exc_info:
         Settings(
             JWT_SECRET_KEY="secure-jwt-key",
             SECRET_KEY="secure-key",
-            DATABASE_URL=None
+            DATABASE_URL=None,
+            POSTGRES_USER=None,
+            POSTGRES_PASSWORD=None,
+            POSTGRES_HOST=None,
+            POSTGRES_DB=None
         )
     assert "DATABASE_URL is missing" in str(exc_info.value)
 
