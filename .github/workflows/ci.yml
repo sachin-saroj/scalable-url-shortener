@@ -62,6 +62,7 @@ jobs:
           REDIS_HOST: localhost
           REDIS_PORT: 6379
           JWT_SECRET_KEY: test-secret-key-for-ci
+          SECRET_KEY: test-secret-key-for-ci
           APP_ENV: testing
           APP_DEBUG: false
         run: |
