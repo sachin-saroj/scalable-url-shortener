@@ -21,7 +21,7 @@ from datetime import datetime, timezone, timedelta
 from uuid import UUID
 
 from jose import jwt, JWTError
-from passlib.context import CryptContext
+import bcrypt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,11 +38,17 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 # ── Password Hashing ──────────────────────────────────
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto",
-    bcrypt__rounds=12,  # ~250ms per hash (good balance of security/speed)
-)
+def hash_password(password: str) -> str:
+    # Hash a password using bcrypt
+    salt = bcrypt.gensalt(rounds=12)
+    return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
+
+def verify_password(password: str, hashed_password: str) -> bool:
+    # Verify a password against a hash
+    try:
+        return bcrypt.checkpw(password.encode("utf-8"), hashed_password.encode("utf-8"))
+    except Exception:
+        return False
 
 
 class AuthService:
@@ -73,7 +79,7 @@ class AuthService:
             raise ValueError("Username already taken")
 
         # Hash password
-        password_hash = pwd_context.hash(request.password)
+        password_hash = hash_password(request.password)
 
         # Create user
         user = User(
@@ -114,7 +120,7 @@ class AuthService:
             raise ValueError("Invalid email or password")
 
         # Verify password
-        if not pwd_context.verify(request.password, user.password_hash):
+        if not verify_password(request.password, user.password_hash):
             raise ValueError("Invalid email or password")
 
         # Check if user is active

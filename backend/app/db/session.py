@@ -19,13 +19,18 @@ from app.config import get_settings
 settings = get_settings()
 
 # ── Async Engine ───────────────────────────────────────
+engine_kwargs = {
+    "echo": settings.APP_DEBUG,           # Log SQL in dev mode
+    "pool_pre_ping": True,                # Test connections before use
+}
+if not settings.DATABASE_URL.startswith("sqlite"):
+    engine_kwargs["pool_size"] = 20       # Persistent connections
+    engine_kwargs["max_overflow"] = 10    # Burst connections
+    engine_kwargs["pool_recycle"] = 3600  # Recycle connections every hour
+
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=settings.APP_DEBUG,           # Log SQL in dev mode
-    pool_size=20,                      # Persistent connections
-    max_overflow=10,                   # Burst connections
-    pool_pre_ping=True,                # Test connections before use
-    pool_recycle=3600,                 # Recycle connections every hour
+    **engine_kwargs
 )
 
 # ── Session Factory ────────────────────────────────────
