@@ -5,7 +5,8 @@ Unit tests for the core encoding algorithm.
 """
 
 import pytest
-from app.utils.base62 import encode, decode, encode_id, decode_id
+
+from app.utils.base62 import decode, decode_id, encode, encode_id
 
 
 class TestBase62Encode:

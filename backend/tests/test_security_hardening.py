@@ -1,7 +1,8 @@
-import os
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 from fastapi import status
+
 from app.config import Settings
 from app.utils.validators import is_valid_url
 
@@ -13,7 +14,7 @@ def test_settings_validation():
         Settings(
             JWT_SECRET_KEY="change-me",
             SECRET_KEY="secure-key",
-            DATABASE_URL="postgresql+asyncpg://user:pass@host/db"
+            DATABASE_URL="postgresql+asyncpg://user:pass@host/db",
         )
     assert "JWT_SECRET_KEY must be changed" in str(exc_info.value)
 
@@ -22,7 +23,7 @@ def test_settings_validation():
         Settings(
             JWT_SECRET_KEY="secure-jwt-key",
             SECRET_KEY="change-me",
-            DATABASE_URL="postgresql+asyncpg://user:pass@host/db"
+            DATABASE_URL="postgresql+asyncpg://user:pass@host/db",
         )
     assert "SECRET_KEY must be changed" in str(exc_info.value)
 
@@ -35,7 +36,7 @@ def test_settings_validation():
             POSTGRES_USER=None,
             POSTGRES_PASSWORD=None,
             POSTGRES_HOST=None,
-            POSTGRES_DB=None
+            POSTGRES_DB=None,
         )
     assert "DATABASE_URL is missing" in str(exc_info.value)
 
@@ -48,7 +49,7 @@ def test_settings_cors_production():
         JWT_SECRET_KEY="secure-jwt-key",
         SECRET_KEY="secure-key",
         DATABASE_URL="postgresql+asyncpg://user:pass@host/db",
-        CORS_ORIGINS="http://localhost:3000,http://example.com,*"
+        CORS_ORIGINS="http://localhost:3000,http://example.com,*",
     )
     assert "http://localhost:3000" in dev_settings.cors_origins_list
     assert "*" in dev_settings.cors_origins_list
@@ -59,7 +60,7 @@ def test_settings_cors_production():
         JWT_SECRET_KEY="secure-jwt-key",
         SECRET_KEY="secure-key",
         DATABASE_URL="postgresql+asyncpg://user:pass@host/db",
-        CORS_ORIGINS="http://localhost:3000,http://example.com,*,http://127.0.0.1:3000"
+        CORS_ORIGINS="http://localhost:3000,http://example.com,*,http://127.0.0.1:3000",
     )
     assert "http://localhost:3000" not in prod_settings.cors_origins_list
     assert "http://127.0.0.1:3000" not in prod_settings.cors_origins_list
@@ -86,7 +87,7 @@ def test_settings_cors_production():
         ("data:text/html,<html>", False),
         ("file:///etc/passwd", False),
         ("ftp://ftp.example.com", False),
-    ]
+    ],
 )
 def test_url_validation_ssrf(url, expected_valid):
     valid, _ = is_valid_url(url)

@@ -1,26 +1,26 @@
 """
 Tests for AnalyticsService
 ──────────────────────────
-Unit and integration tests for recording click events, calculating analytics timelines, and aggregating daily reports.
+Unit and integration tests for recording click events, calculating
+analytics timelines, and aggregating daily reports.
 """
 
+from datetime import date, datetime, timedelta, timezone
+
 import pytest
-from datetime import datetime, date, timezone, timedelta
-from app.services.analytics_service import AnalyticsService
-from app.models.url import URL
+
 from app.models.click import Click
 from app.models.daily_analytics import DailyAnalytics
+from app.models.url import URL
+from app.services.analytics_service import AnalyticsService
+
 
 @pytest.mark.asyncio
 class TestAnalyticsService:
     """Test suite for AnalyticsService."""
 
     async def _setup_test_url(self, db) -> URL:
-        url = URL(
-            original_url="https://google.com/search",
-            short_code="search1",
-            is_active=True
-        )
+        url = URL(original_url="https://google.com/search", short_code="search1", is_active=True)
         db.add(url)
         await db.commit()
         await db.refresh(url)
@@ -38,11 +38,12 @@ class TestAnalyticsService:
             user_agent="Firefox",
             referer="https://t.co",
             country="US",
-            city="New York"
+            city="New York",
         )
 
         # Verify DB entry
         import sqlalchemy as sa
+
         res = await db_session.execute(sa.select(Click).where(Click.url_id == url.id))
         clicks = res.scalars().all()
         assert len(clicks) == 1
@@ -64,7 +65,7 @@ class TestAnalyticsService:
             "clicks_24h": 22,
             "clicks_7d": 77,
             "top_countries": [{"country": "IN", "clicks": 999}],
-            "clicks_by_day": []
+            "clicks_by_day": [],
         }
         await cache_service.set_analytics(url.short_code, cached_data, ttl=60)
 
@@ -78,10 +79,16 @@ class TestAnalyticsService:
 
         now = datetime.now(timezone.utc)
         # Create some historical click records
-        c1 = Click(url_id=url.id, ip_address="1.1.1.1", country="IN", clicked_at=now - timedelta(hours=2))
-        c2 = Click(url_id=url.id, ip_address="1.1.1.1", country="IN", clicked_at=now - timedelta(hours=5)) # non-unique IP
-        c3 = Click(url_id=url.id, ip_address="2.2.2.2", country="US", clicked_at=now - timedelta(days=2))
-        
+        c1 = Click(
+            url_id=url.id, ip_address="1.1.1.1", country="IN", clicked_at=now - timedelta(hours=2)
+        )
+        c2 = Click(
+            url_id=url.id, ip_address="1.1.1.1", country="IN", clicked_at=now - timedelta(hours=5)
+        )  # non-unique IP
+        c3 = Click(
+            url_id=url.id, ip_address="2.2.2.2", country="US", clicked_at=now - timedelta(days=2)
+        )
+
         db_session.add_all([c1, c2, c3])
         await db_session.commit()
 
@@ -91,7 +98,7 @@ class TestAnalyticsService:
         assert analytics["unique_clicks"] == 2
         assert analytics["clicks_24h"] == 2
         assert analytics["clicks_7d"] == 3
-        
+
         # Verify top countries list sorted by count desc
         top_countries = analytics["top_countries"]
         assert len(top_countries) == 2
@@ -112,9 +119,15 @@ class TestAnalyticsService:
         start_time = datetime.combine(target_date, datetime.min.time()).replace(tzinfo=timezone.utc)
 
         # Create clicks for target_date
-        c1 = Click(url_id=url.id, ip_address="192.168.1.1", clicked_at=start_time + timedelta(hours=2))
-        c2 = Click(url_id=url.id, ip_address="192.168.1.2", clicked_at=start_time + timedelta(hours=4))
-        c3 = Click(url_id=url.id, ip_address="192.168.1.1", clicked_at=start_time + timedelta(hours=6)) # duplicate IP
+        c1 = Click(
+            url_id=url.id, ip_address="192.168.1.1", clicked_at=start_time + timedelta(hours=2)
+        )
+        c2 = Click(
+            url_id=url.id, ip_address="192.168.1.2", clicked_at=start_time + timedelta(hours=4)
+        )
+        c3 = Click(
+            url_id=url.id, ip_address="192.168.1.1", clicked_at=start_time + timedelta(hours=6)
+        )  # duplicate IP
 
         db_session.add_all([c1, c2, c3])
         await db_session.commit()
@@ -125,10 +138,10 @@ class TestAnalyticsService:
 
         # Verify daily_analytics record
         import sqlalchemy as sa
+
         res = await db_session.execute(
             sa.select(DailyAnalytics).where(
-                DailyAnalytics.url_id == url.id,
-                DailyAnalytics.date == target_date
+                DailyAnalytics.url_id == url.id, DailyAnalytics.date == target_date
             )
         )
         record = res.scalar_one_or_none()
@@ -138,7 +151,9 @@ class TestAnalyticsService:
 
         # Rerun aggregation to test upsert update branch
         # Add a new click on the same day
-        c4 = Click(url_id=url.id, ip_address="192.168.1.3", clicked_at=start_time + timedelta(hours=8))
+        c4 = Click(
+            url_id=url.id, ip_address="192.168.1.3", clicked_at=start_time + timedelta(hours=8)
+        )
         db_session.add(c4)
         await db_session.commit()
 
@@ -149,8 +164,7 @@ class TestAnalyticsService:
         db_session.expire(record)
         res = await db_session.execute(
             sa.select(DailyAnalytics).where(
-                DailyAnalytics.url_id == url.id,
-                DailyAnalytics.date == target_date
+                DailyAnalytics.url_id == url.id, DailyAnalytics.date == target_date
             )
         )
         record = res.scalar_one()

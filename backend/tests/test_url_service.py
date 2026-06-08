@@ -1,17 +1,19 @@
 """
 Tests for URLService
 ────────────────────
-Unit and integration tests for URL shortening, custom aliases, resolution, expiration, deactivation, and caching.
+Unit and integration tests for URL shortening, custom aliases, resolution,
+expiration, deactivation, and caching.
 """
 
-import pytest
-import pytest_asyncio
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
-from app.services.url_service import URLService
-from app.schemas.url import URLCreateRequest
-from app.models.url import URL
+
+import pytest
+
 from app.models.user import User
+from app.schemas.url import URLCreateRequest
+from app.services.url_service import URLService
+
 
 @pytest.mark.asyncio
 class TestURLService:
@@ -19,10 +21,7 @@ class TestURLService:
 
     async def _setup_user(self, db):
         user = User(
-            id=uuid4(),
-            email="owner@example.com",
-            username="owneruser",
-            password_hash="hash"
+            id=uuid4(), email="owner@example.com", username="owneruser", password_hash="hash"
         )
         db.add(user)
         await db.commit()
@@ -32,7 +31,7 @@ class TestURLService:
     async def test_create_short_url_success(self, db_session, cache_service):
         service = URLService(db_session, cache_service)
         request = URLCreateRequest(url="https://github.com/google")
-        
+
         response = await service.create_short_url(request)
         assert response.original_url == "https://github.com/google"
         assert response.short_code is not None
@@ -45,26 +44,26 @@ class TestURLService:
     async def test_create_short_url_invalid(self, db_session, cache_service):
         service = URLService(db_session, cache_service)
         request = URLCreateRequest.model_construct(url="not-a-valid-url")
-        
+
         with pytest.raises(ValueError, match="URL scheme must be http or https"):
             await service.create_short_url(request)
 
     async def test_create_short_url_idempotency(self, db_session, cache_service):
         service = URLService(db_session, cache_service)
         request = URLCreateRequest(url="https://wikipedia.org")
-        
+
         resp1 = await service.create_short_url(request)
         resp2 = await service.create_short_url(request)
-        
+
         assert resp1.short_code == resp2.short_code
 
     async def test_create_short_url_custom_alias_success(self, db_session, cache_service):
         service = URLService(db_session, cache_service)
         request = URLCreateRequest(url="https://python.org", custom_alias="my-python")
-        
+
         response = await service.create_short_url(request)
         assert response.short_code == "my-python"
-        
+
         cached = await cache_service.get_url("my-python")
         assert cached == "https://python.org"
 
@@ -99,7 +98,7 @@ class TestURLService:
         # Resolve URL (should fetch from DB and re-cache)
         url, url_id = await service.get_original_url(response.short_code)
         assert url == "https://elixir-lang.org"
-        
+
         # Verify it was re-cached
         cached = await cache_service.get_url(response.short_code)
         assert cached == "https://elixir-lang.org"
