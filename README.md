@@ -105,6 +105,33 @@ This project is not deployed at production scale, but is architected using patte
 -Asynchronous background processing
 -Separation of read/write workloads
 
+## 🧪 Running Tests
+
+LinkForge has a comprehensive test suite of 95 unit and integration tests covering encoding, validation, caching, security hardening, user registration/login, and URL lifecycle resolution.
+
+### Running Backend Tests Locally
+
+1. Make sure you are inside the virtual environment:
+   ```bash
+   cd backend
+   # Windows
+   .venv\Scripts\activate
+   # Mac/Linux
+   source .venv/bin/activate
+   ```
+
+2. Run the test suite:
+   ```bash
+   python -m pytest
+   ```
+   *Note: If PostgreSQL is not running locally, the test suite automatically falls back to an in-memory SQLite database (`sqlite+aiosqlite:///:memory:`).*
+
+3. Run tests with coverage and generate reports:
+   ```bash
+   python -m pytest --cov=app --cov-report=term --cov-report=html
+   ```
+   *The HTML coverage report will be generated under the `htmlcov/` directory.*
+
 ---
 
 ## 🛑 Stopping the Application
