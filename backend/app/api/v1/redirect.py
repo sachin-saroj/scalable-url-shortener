@@ -64,6 +64,11 @@ async def redirect_to_url(
             detail="Short URL not found",
         )
     except ValueError as e:
+        if "malformed" in str(e).lower():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e),
+            )
         raise HTTPException(
             status_code=status.HTTP_410_GONE,
             detail=str(e),

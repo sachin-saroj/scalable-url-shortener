@@ -158,9 +158,17 @@ class URLService:
         if cached_url:
             # Still need the URL ID for click tracking
             url_record = await self._find_by_code(code)
+            if url_record and (not url_record.is_active):
+                await self.cache.delete_url(code)
+                raise LookupError("Short URL not found")
             if url_record and url_record.is_expired:
                 await self.cache.delete_url(code)
                 raise ValueError("This short URL has expired")
+            # Check if cached destination URL is malformed
+            is_valid, _ = is_valid_url(cached_url)
+            if not is_valid:
+                await self.cache.delete_url(code)
+                raise ValueError("Destination URL is malformed")
             if url_record:
                 return cached_url, url_record.id
             # Cache has stale data — URL was deleted from DB
@@ -174,6 +182,11 @@ class URLService:
         # Step 3: Check expiry
         if url_record.is_expired:
             raise ValueError("This short URL has expired")
+
+        # Check if destination URL is malformed
+        is_valid, _ = is_valid_url(url_record.original_url)
+        if not is_valid:
+            raise ValueError("Destination URL is malformed")
 
         # Step 4: Cache for next time
         cache_ttl = settings.URL_CACHE_TTL

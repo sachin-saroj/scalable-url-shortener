@@ -13,6 +13,7 @@ WHY pydantic-settings?
 
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import model_validator
 
 
 class Settings(BaseSettings):
@@ -33,37 +34,34 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
 
     # ── Database ───────────────────────────────
-    POSTGRES_USER: str = "shortener"
-    POSTGRES_PASSWORD: str = "shortener_secret_2026"
-    POSTGRES_DB: str = "url_shortener"
-    POSTGRES_HOST: str = "db"
+    POSTGRES_USER: str | None = None
+    POSTGRES_PASSWORD: str | None = None
+    POSTGRES_DB: str | None = None
+    POSTGRES_HOST: str | None = None
     POSTGRES_PORT: int = 5432
-
-    @property
-    def DATABASE_URL(self) -> str:
-        return (
-            f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
-        )
+    DATABASE_URL: str | None = None
 
     @property
     def SYNC_DATABASE_URL(self) -> str:
         """Synchronous URL for Alembic migrations."""
-        return (
-            f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
-        )
+        if not self.DATABASE_URL:
+            raise RuntimeError("DATABASE_URL is missing.")
+        return self.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
 
     # ── Redis ──────────────────────────────────
     REDIS_HOST: str = "redis"
     REDIS_PORT: int = 6379
+    REDIS_PASSWORD: str | None = None
 
     @property
     def REDIS_URL(self) -> str:
+        if self.REDIS_PASSWORD:
+            return f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/0"
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/0"
 
     # ── JWT ────────────────────────────────────
-    JWT_SECRET_KEY: str = "change-this-to-a-very-long-random-string-in-production"
+    JWT_SECRET_KEY: str = "change-me"
+    SECRET_KEY: str = "change-me"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
@@ -75,10 +73,14 @@ class Settings(BaseSettings):
     # ── Celery ─────────────────────────────────
     @property
     def CELERY_BROKER_URL(self) -> str:
+        if self.REDIS_PASSWORD:
+            return f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/1"
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/1"
 
     @property
     def CELERY_RESULT_BACKEND(self) -> str:
+        if self.REDIS_PASSWORD:
+            return f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/2"
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/2"
 
     # ── Cache ──────────────────────────────────
@@ -92,7 +94,43 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins_list(self) -> list[str]:
-        return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
+        if not self.CORS_ORIGINS:
+            return []
+        origins = [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+        if self.APP_ENV.lower() == "production":
+            # Remove localhost, 127.0.0.1, 0.0.0.0, and wildcard in production
+            filtered = []
+            for origin in origins:
+                lower_origin = origin.lower()
+                if "localhost" in lower_origin or "127.0.0.1" in lower_origin or "0.0.0.0" in lower_origin:
+                    continue
+                if origin == "*":
+                    continue
+                filtered.append(origin)
+            return filtered
+        return origins
+
+    @model_validator(mode="after")
+    def validate_secrets(self) -> "Settings":
+        # Check JWT_SECRET_KEY
+        if self.JWT_SECRET_KEY in ("change-this-to-a-very-long-random-string-in-production", "change-me", ""):
+            raise RuntimeError("JWT_SECRET_KEY must be changed from the default value.")
+
+        # Check SECRET_KEY
+        if self.SECRET_KEY in ("change-me", "change-this-to-a-very-long-random-string-in-production", ""):
+            raise RuntimeError("SECRET_KEY must be changed from the default value.")
+
+        # Construct or validate DATABASE_URL
+        if not self.DATABASE_URL:
+            if self.POSTGRES_USER and self.POSTGRES_PASSWORD and self.POSTGRES_HOST and self.POSTGRES_DB:
+                self.DATABASE_URL = (
+                    f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+                    f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+                )
+            else:
+                raise RuntimeError("DATABASE_URL is missing from environment.")
+
+        return self
 
 
 @lru_cache()

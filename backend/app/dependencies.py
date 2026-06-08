@@ -74,28 +74,49 @@ async def get_rate_limiter(redis: Redis = Depends(get_redis)) -> RateLimiter:
     )
 
 
-async def check_rate_limit(
-    request: Request,
-    limiter: RateLimiter = Depends(get_rate_limiter),
-):
+class RateLimitRule:
     """
-    Rate limiting dependency.
+    Customizable rate limiting dependency creator.
     
-    Add to any endpoint:
-        @router.post("/shorten", dependencies=[Depends(check_rate_limit)])
+    Allows customizing max_requests and window_seconds per endpoint,
+    while scoping keys to the endpoint path to prevent starvation.
     """
-    # Get client IP (handle proxy forwarding)
-    client_ip = request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
-    if not client_ip:
-        client_ip = request.client.host if request.client else "unknown"
+    def __init__(self, max_requests: int | None = None, window_seconds: int | None = None):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
 
-    allowed, info = await limiter.is_allowed(client_ip)
-    if not allowed:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=info["detail"],
-            headers={"Retry-After": str(info["retry_after"])},
-        )
+    async def __call__(
+        self,
+        request: Request,
+        redis: Redis = Depends(get_redis),
+    ):
+        # Get client IP and handle proxy forwarding
+        client_ip = request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+        if not client_ip:
+            client_ip = request.client.host if request.client else "unknown"
+
+        # Scope the key to the specific endpoint path to prevent cross-endpoint starvation
+        identifier = f"{client_ip}:{request.url.path}"
+
+        # Apply limits (fallback to settings if not customized)
+        limit = self.max_requests if self.max_requests is not None else settings.RATE_LIMIT_REQUESTS
+        window = self.window_seconds if self.window_seconds is not None else settings.RATE_LIMIT_WINDOW_SECONDS
+
+        limiter = RateLimiter(redis, max_requests=limit, window_seconds=window)
+        allowed, info = await limiter.is_allowed(identifier)
+        if not allowed:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=info["detail"],
+                headers={"Retry-After": str(info["retry_after"])},
+            )
+
+
+# Default rate limit (applies settings defaults, but scoped by path)
+check_rate_limit = RateLimitRule()
+
+# Tight rate limits for sensitive/authentication endpoints (e.g., login, register)
+check_auth_rate_limit = RateLimitRule(max_requests=5, window_seconds=60)
 
 
 # ── Authentication ────────────────────────────────────

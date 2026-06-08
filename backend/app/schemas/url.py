@@ -42,9 +42,9 @@ class URLCreateRequest(BaseModel):
     @field_validator("url")
     @classmethod
     def validate_url_format(cls, v: str) -> str:
-        """Ensure URL has a valid scheme."""
-        if not v.startswith(("http://", "https://")):
-            raise ValueError("URL must start with http:// or https://")
+        """Ensure URL is safe and has a valid format (SSRF protection)."""
+        from app.utils.validators import validate_url_safety
+        validate_url_safety(v)
         return v
 
     @field_validator("custom_alias")

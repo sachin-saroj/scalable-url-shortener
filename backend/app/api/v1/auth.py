@@ -10,7 +10,7 @@ GET  /api/v1/auth/me        — Get current user info
 from fastapi import APIRouter, HTTPException, status, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dependencies import DB, CurrentUser, check_rate_limit
+from app.dependencies import DB, CurrentUser, check_rate_limit, check_auth_rate_limit
 from app.schemas.user import (
     UserRegisterRequest, UserLoginRequest, TokenResponse,
     UserResponse, RefreshTokenRequest,
@@ -25,7 +25,7 @@ router = APIRouter()
     response_model=dict,
     status_code=status.HTTP_201_CREATED,
     summary="Register a new user",
-    dependencies=[Depends(check_rate_limit)],
+    dependencies=[Depends(check_auth_rate_limit)],
 )
 async def register(request: UserRegisterRequest, db: DB):
     """Register a new user account."""
@@ -47,7 +47,7 @@ async def register(request: UserRegisterRequest, db: DB):
     "/login",
     response_model=dict,
     summary="Login",
-    dependencies=[Depends(check_rate_limit)],
+    dependencies=[Depends(check_auth_rate_limit)],
 )
 async def login(request: UserLoginRequest, db: DB):
     """Login with email and password."""
