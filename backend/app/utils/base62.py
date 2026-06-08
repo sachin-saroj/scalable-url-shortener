@@ -40,13 +40,13 @@ OFFSET = 100000  # Starting offset to ensure minimum code length
 def encode(num: int) -> str:
     """
     Encode a positive integer to a Base62 string.
-    
+
     Args:
         num: Database auto-increment ID (must be positive)
-    
+
     Returns:
         Base62 encoded string (e.g., "Ab3xK9")
-    
+
     Example:
         encode(1) → "1"
         encode(62) → "10"
@@ -67,19 +67,19 @@ def encode(num: int) -> str:
 def decode(code: str) -> int:
     """
     Decode a Base62 string back to integer.
-    
+
     Args:
         code: Base62 encoded string
-        
+
     Returns:
         Original integer value
-    
+
     Example:
         decode("Ab3xK9") → original integer
     """
     if not code:
         raise ValueError("Cannot decode empty string")
-    
+
     num = 0
     for char in code:
         if char not in CHARSET:
@@ -91,13 +91,13 @@ def decode(code: str) -> int:
 def encode_id(db_id: int) -> str:
     """
     Encode a database ID with shuffling to prevent enumeration.
-    
+
     This adds an offset and applies a transformation so that
     sequential IDs don't produce sequential short codes.
-    
+
     Args:
         db_id: Auto-increment database ID
-    
+
     Returns:
         Shuffled Base62 string
     """

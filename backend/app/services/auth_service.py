@@ -17,31 +17,34 @@ COMMON MISTAKES AVOIDED:
 """
 
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+from typing import Any
 from uuid import UUID
 
-from jose import jwt, JWTError
 import bcrypt
-from sqlalchemy import select
+from jose import JWTError, jwt
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.models.user import User
 from app.schemas.user import (
-    UserRegisterRequest,
-    UserLoginRequest,
     TokenResponse,
+    UserLoginRequest,
+    UserRegisterRequest,
     UserResponse,
 )
-from app.config import get_settings
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
+
 
 # ── Password Hashing ──────────────────────────────────
 def hash_password(password: str) -> str:
     # Hash a password using bcrypt
     salt = bcrypt.gensalt(rounds=12)
     return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
+
 
 def verify_password(password: str, hashed_password: str) -> bool:
     # Verify a password against a hash
@@ -60,7 +63,7 @@ class AuthService:
     async def register(self, request: UserRegisterRequest) -> tuple[UserResponse, TokenResponse]:
         """
         Register a new user.
-        
+
         FLOW:
         1. Check if email/username already exists
         2. Hash password with bcrypt
@@ -109,7 +112,7 @@ class AuthService:
     async def login(self, request: UserLoginRequest) -> tuple[UserResponse, TokenResponse]:
         """
         Authenticate user and return JWT tokens.
-        
+
         SECURITY:
         - Same error message for wrong email or wrong password
           (prevents user enumeration attacks)
@@ -144,7 +147,7 @@ class AuthService:
         """Generate new token pair from valid refresh token."""
         payload = self._verify_token(refresh_token, expected_type="refresh")
         user_id = payload.get("sub")
-        
+
         user = await self._find_by_id(UUID(user_id))
         if not user or not user.is_active:
             raise ValueError("Invalid refresh token")
@@ -155,7 +158,7 @@ class AuthService:
         """Validate access token and return user."""
         payload = self._verify_token(token, expected_type="access")
         user_id = payload.get("sub")
-        
+
         user = await self._find_by_id(UUID(user_id))
         if not user or not user.is_active:
             raise ValueError("User not found or deactivated")
@@ -198,14 +201,14 @@ class AuthService:
             expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         )
 
-    def _verify_token(self, token: str, expected_type: str) -> dict:
+    def _verify_token(self, token: str, expected_type: str) -> dict[str, Any]:
         """Verify and decode a JWT token."""
         try:
             payload = jwt.decode(
                 token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
             )
         except JWTError as e:
-            raise ValueError(f"Invalid token: {e}")
+            raise ValueError(f"Invalid token: {e}") from e
 
         # Verify token type
         if payload.get("type") != expected_type:
@@ -234,7 +237,3 @@ class AuthService:
         query = select(func.count(User.id)).where(User.username == username)
         result = await self.db.execute(query)
         return (result.scalar() or 0) > 0
-
-
-# Need this import for _check_email_exists and _check_username_exists
-from sqlalchemy import func

@@ -13,10 +13,10 @@ DESIGN:
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.dependencies import DB, Cache, OptionalUser, CurrentUser, check_rate_limit
-from app.schemas.url import URLCreateRequest, URLResponse, URLListResponse, URLListItem
-from app.services.url_service import URLService
+from app.dependencies import DB, Cache, CurrentUser, OptionalUser, check_rate_limit
+from app.schemas.url import URLCreateRequest, URLListItem, URLListResponse, URLResponse
 from app.services.security_service import check_url_safety
+from app.services.url_service import URLService
 
 router = APIRouter()
 
@@ -37,7 +37,7 @@ async def shorten_url(
 ):
     """
     Create a short URL.
-    
+
     - Anonymous users can create URLs (no auth required)
     - Authenticated users get URLs linked to their account
     - Rate limited to prevent abuse

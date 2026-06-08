@@ -5,13 +5,15 @@ Configures Alembic to use our SQLAlchemy models and settings.
 """
 
 from logging.config import fileConfig
+
 from sqlalchemy import engine_from_config, pool
+
 from alembic import context
+from app.config import get_settings
 
 # Import all models so Alembic can detect them
 from app.db.base import Base
-from app.models import User, URL, Click, DailyAnalytics  # noqa: F401
-from app.config import get_settings
+from app.models import URL, Click, DailyAnalytics, User  # noqa: F401
 
 settings = get_settings()
 

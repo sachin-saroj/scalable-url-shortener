@@ -17,6 +17,7 @@ WHY multi-layer?
 
 import logging
 import re
+
 import httpx
 
 from app.config import get_settings
@@ -26,19 +27,19 @@ settings = get_settings()
 
 # Known phishing/spam patterns
 SUSPICIOUS_PATTERNS = [
-    r"bit\.ly/.*bit\.ly",           # Nested shorteners
-    r"login.*password",              # Credential phishing
-    r"verify.*account.*suspended",   # Account scam patterns
-    r"\.exe$",                       # Direct executable links
-    r"\.scr$",                       # Screensaver (malware vector)
-    r"\.bat$",                       # Batch files
+    r"bit\.ly/.*bit\.ly",  # Nested shorteners
+    r"login.*password",  # Credential phishing
+    r"verify.*account.*suspended",  # Account scam patterns
+    r"\.exe$",  # Direct executable links
+    r"\.scr$",  # Screensaver (malware vector)
+    r"\.bat$",  # Batch files
 ]
 
 
 async def check_url_safety(url: str) -> tuple[bool, str]:
     """
     Check if a URL is safe to shorten.
-    
+
     Returns:
         Tuple of (is_safe, reason)
     """
@@ -59,7 +60,7 @@ async def check_url_safety(url: str) -> tuple[bool, str]:
 async def _check_google_safe_browsing(url: str) -> tuple[bool, str]:
     """
     Check URL against Google Safe Browsing API.
-    
+
     TRADE-OFF:
     - Adds ~100ms latency to URL creation (acceptable)
     - Requires Google API key (free but needs setup)

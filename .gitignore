@@ -53,5 +53,10 @@ htmlcov/
 # Alembic
 alembic/versions/__pycache__/
 
+# Type checking / Linting
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
 # GeoIP
 *.mmdb

@@ -4,14 +4,13 @@ Analytics Endpoints
 GET /api/v1/analytics/{short_code} — Get URL analytics
 """
 
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dependencies import DB, Cache, CurrentUser, get_db, get_cache
+from app.dependencies import DB, Cache, CurrentUser
 from app.models.url import URL
-from app.services.analytics_service import AnalyticsService
 from app.schemas.analytics import AnalyticsResponse
+from app.services.analytics_service import AnalyticsService
 
 router = APIRouter()
 
@@ -30,14 +29,12 @@ async def get_url_analytics(
 ):
     """
     Get analytics for a short URL.
-    
+
     Only the URL owner can view analytics.
     Response is cached for 60 seconds.
     """
     # Find the URL and verify ownership
-    query = select(URL).where(
-        (URL.short_code == short_code) | (URL.custom_alias == short_code)
-    )
+    query = select(URL).where((URL.short_code == short_code) | (URL.custom_alias == short_code))
     result = await db.execute(query)
     url_record = result.scalar_one_or_none()
 

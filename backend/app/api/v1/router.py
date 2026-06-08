@@ -6,7 +6,7 @@ Aggregates all v1 API routes under /api/v1 prefix.
 
 from fastapi import APIRouter
 
-from app.api.v1 import urls, redirect, analytics, auth, qr
+from app.api.v1 import analytics, auth, qr, urls
 
 router = APIRouter(prefix="/api/v1")
 

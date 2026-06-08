@@ -19,7 +19,7 @@ WHY NOT Token Bucket?
 
 IMPLEMENTATION:
 - Two Redis keys per IP: current window + previous window
-- Each expires after 2× window duration
+- Each expires after 2x window duration
 - Rate calculated by weighted sum
 
 FAILURE MODE:
@@ -27,8 +27,10 @@ FAILURE MODE:
 - Reason: availability > perfect rate limiting
 """
 
-import time
 import logging
+import time
+from typing import Any
+
 from redis.asyncio import Redis
 
 logger = logging.getLogger(__name__)
@@ -37,7 +39,7 @@ logger = logging.getLogger(__name__)
 class RateLimiter:
     """
     Redis-backed sliding window rate limiter.
-    
+
     Usage:
         limiter = RateLimiter(redis, max_requests=100, window_seconds=60)
         allowed, info = await limiter.is_allowed("192.168.1.1")
@@ -59,13 +61,13 @@ class RateLimiter:
         """Generate Redis key for a specific window."""
         return f"rate:{identifier}:{window}"
 
-    async def is_allowed(self, identifier: str) -> tuple[bool, dict]:
+    async def is_allowed(self, identifier: str) -> tuple[bool, dict[str, Any]]:
         """
         Check if request from identifier is within rate limit.
-        
+
         Args:
             identifier: Client IP address or API key
-            
+
         Returns:
             Tuple of (allowed: bool, info: dict with remaining/retry_after)
         """

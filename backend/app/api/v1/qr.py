@@ -4,15 +4,15 @@ QR Code Endpoint
 GET /api/v1/qr/{short_code} — Generate QR code for a short URL
 """
 
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.dependencies import get_db
 from app.models.url import URL
 from app.services.qr_service import generate_qr_code
-from app.config import get_settings
 
 router = APIRouter()
 settings = get_settings()
@@ -34,9 +34,7 @@ async def get_qr_code(
 ):
     """Generate a QR code image for the given short URL."""
     # Validate the short code exists
-    query = select(URL).where(
-        (URL.short_code == short_code) | (URL.custom_alias == short_code)
-    )
+    query = select(URL).where((URL.short_code == short_code) | (URL.custom_alias == short_code))
     result = await db.execute(query)
     url_record = result.scalar_one_or_none()
 

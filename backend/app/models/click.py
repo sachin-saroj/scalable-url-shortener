@@ -21,7 +21,7 @@ SCALABILITY NOTE:
 
 from datetime import datetime
 
-from sqlalchemy import BigInteger, String, Text, DateTime, ForeignKey, Index, text
+from sqlalchemy import BigInteger, DateTime, ForeignKey, Index, String, Text, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -30,29 +30,20 @@ from app.db.base import Base
 class Click(Base):
     __tablename__ = "clicks"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     url_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("urls.id", ondelete="CASCADE"),
         nullable=False,
     )
     ip_address: Mapped[str | None] = mapped_column(
-        String(45), nullable=True  # IPv6 max length is 45
+        String(45),
+        nullable=True,  # IPv6 max length is 45
     )
-    user_agent: Mapped[str | None] = mapped_column(
-        Text, nullable=True
-    )
-    country: Mapped[str | None] = mapped_column(
-        String(100), nullable=True
-    )
-    city: Mapped[str | None] = mapped_column(
-        String(100), nullable=True
-    )
-    referer: Mapped[str | None] = mapped_column(
-        Text, nullable=True
-    )
+    user_agent: Mapped[str | None] = mapped_column(Text, nullable=True)
+    country: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    city: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    referer: Mapped[str | None] = mapped_column(Text, nullable=True)
     clicked_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -63,9 +54,7 @@ class Click(Base):
     url = relationship("URL", back_populates="clicks", lazy="selectin")
 
     # ── Composite Index for Analytics Queries ──────────
-    __table_args__ = (
-        Index("idx_clicks_url_id_clicked_at", "url_id", "clicked_at"),
-    )
+    __table_args__ = (Index("idx_clicks_url_id_clicked_at", "url_id", "clicked_at"),)
 
     def __repr__(self) -> str:
         return f"<Click url_id={self.url_id} at {self.clicked_at}>"

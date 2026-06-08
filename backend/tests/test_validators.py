@@ -3,7 +3,6 @@ Tests for URL Validation
 ──────────────────────────
 """
 
-import pytest
 from app.utils.validators import is_valid_url, sanitize_url
 
 

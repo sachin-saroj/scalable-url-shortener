@@ -16,7 +16,7 @@ COMMON MISTAKE:
 
 from datetime import date
 
-from sqlalchemy import BigInteger, Integer, Date, ForeignKey, Index
+from sqlalchemy import BigInteger, Date, ForeignKey, Index, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -25,28 +25,18 @@ from app.db.base import Base
 class DailyAnalytics(Base):
     __tablename__ = "daily_analytics"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     url_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("urls.id", ondelete="CASCADE"),
         nullable=False,
     )
-    date: Mapped[date] = mapped_column(
-        Date, nullable=False
-    )
-    total_clicks: Mapped[int] = mapped_column(
-        Integer, nullable=False, default=0
-    )
-    unique_clicks: Mapped[int] = mapped_column(
-        Integer, nullable=False, default=0
-    )
+    date: Mapped[date] = mapped_column(Date, nullable=False)
+    total_clicks: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    unique_clicks: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     # ── Composite Index for Efficient Lookups ──────────
-    __table_args__ = (
-        Index("idx_daily_analytics_url_date", "url_id", "date", unique=True),
-    )
+    __table_args__ = (Index("idx_daily_analytics_url_date", "url_id", "date", unique=True),)
 
     def __repr__(self) -> str:
         return f"<DailyAnalytics url_id={self.url_id} date={self.date} clicks={self.total_clicks}>"

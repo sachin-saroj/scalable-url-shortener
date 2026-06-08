@@ -46,3 +46,11 @@ coverage==7.14.1
 fakeredis==2.36.1
 sortedcontainers==2.4.0
 aiosqlite==0.22.1
+
+# ── Linting, Formatting, & Typing ──────────
+ruff==0.9.1
+mypy==1.14.1
+pre-commit==4.0.1
+types-python-jose==3.3.4.20240106
+types-passlib==1.7.7.20240819
+types-qrcode==8.0.0.20241004

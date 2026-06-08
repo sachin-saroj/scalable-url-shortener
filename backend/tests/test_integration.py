@@ -4,11 +4,12 @@ Integration Tests
 Tests verification of API endpoints under real/simulated service connections.
 """
 
+from datetime import datetime, timedelta, timezone
+
 import pytest
-from httpx import AsyncClient
-from datetime import datetime, timezone, timedelta
+
 from app.models.url import URL
-from app.models.user import User
+
 
 @pytest.mark.asyncio
 class TestIntegration:
@@ -19,7 +20,7 @@ class TestIntegration:
         reg_payload = {
             "email": "inttest@example.com",
             "username": "intuser",
-            "password": "IntSecurePassword123"
+            "password": "IntSecurePassword123",
         }
         res_reg = await client.post("/api/v1/auth/register", json=reg_payload)
         assert res_reg.status_code == 201
@@ -32,10 +33,7 @@ class TestIntegration:
         assert res_dup.status_code == 409
 
         # 3. Login User
-        login_payload = {
-            "email": "inttest@example.com",
-            "password": "IntSecurePassword123"
-        }
+        login_payload = {"email": "inttest@example.com", "password": "IntSecurePassword123"}
         res_login = await client.post("/api/v1/auth/login", json=login_payload)
         assert res_login.status_code == 200
         login_data = res_login.json()
@@ -67,10 +65,10 @@ class TestIntegration:
         reg_payload = {
             "email": "owner_int@example.com",
             "username": "owner_int",
-            "password": "Password123"
+            "password": "Password123",
         }
         await client.post("/api/v1/auth/register", json=reg_payload)
-        
+
         login_payload = {"email": "owner_int@example.com", "password": "Password123"}
         res_login = await client.post("/api/v1/auth/login", json=login_payload)
         token = res_login.json()["tokens"]["access_token"]
@@ -106,7 +104,7 @@ class TestIntegration:
             original_url="https://expired-integration.com",
             short_code="exp123",
             expires_at=datetime.now(timezone.utc) - timedelta(hours=1),
-            is_active=True
+            is_active=True,
         )
         db_session.add(url)
         await db_session.commit()

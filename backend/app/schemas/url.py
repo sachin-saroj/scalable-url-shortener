@@ -10,13 +10,15 @@ WHY Pydantic schemas separate from ORM models?
 - Validate input strictly before touching the database
 """
 
-from datetime import datetime
-from pydantic import BaseModel, Field, HttpUrl, field_validator
 import re
+from datetime import datetime
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class URLCreateRequest(BaseModel):
     """Request body for POST /shorten"""
+
     url: str = Field(
         ...,
         min_length=5,
@@ -44,6 +46,7 @@ class URLCreateRequest(BaseModel):
     def validate_url_format(cls, v: str) -> str:
         """Ensure URL is safe and has a valid format (SSRF protection)."""
         from app.utils.validators import validate_url_safety
+
         validate_url_safety(v)
         return v
 
@@ -66,6 +69,7 @@ class URLCreateRequest(BaseModel):
 
 class URLResponse(BaseModel):
     """Response body for successful URL creation."""
+
     short_code: str
     short_url: str
     original_url: str
@@ -78,6 +82,7 @@ class URLResponse(BaseModel):
 
 class URLListItem(BaseModel):
     """Single URL item in the user's URL list."""
+
     short_code: str
     short_url: str
     original_url: str
@@ -92,6 +97,7 @@ class URLListItem(BaseModel):
 
 class URLListResponse(BaseModel):
     """Paginated list of user's URLs."""
+
     urls: list[URLListItem]
     total: int
     page: int

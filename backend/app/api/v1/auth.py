@@ -7,13 +7,15 @@ POST /api/v1/auth/refresh   — Refresh access token
 GET  /api/v1/auth/me        — Get current user info
 """
 
-from fastapi import APIRouter, HTTPException, status, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.dependencies import DB, CurrentUser, check_rate_limit, check_auth_rate_limit
+from app.dependencies import DB, CurrentUser, check_auth_rate_limit
 from app.schemas.user import (
-    UserRegisterRequest, UserLoginRequest, TokenResponse,
-    UserResponse, RefreshTokenRequest,
+    RefreshTokenRequest,
+    TokenResponse,
+    UserLoginRequest,
+    UserRegisterRequest,
+    UserResponse,
 )
 from app.services.auth_service import AuthService
 
