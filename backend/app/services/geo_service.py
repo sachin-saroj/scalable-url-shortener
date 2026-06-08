@@ -16,12 +16,14 @@ SETUP:
 
 import logging
 from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 # Try to import geoip2
 try:
     import geoip2.database
+
     GEOIP_AVAILABLE = True
 except ImportError:
     GEOIP_AVAILABLE = False
@@ -31,10 +33,10 @@ except ImportError:
 GEOIP_DB_PATH = Path(__file__).parent.parent.parent / "data" / "GeoLite2-City.mmdb"
 
 # Global reader (loaded once)
-_reader = None
+_reader: Any = None
 
 
-def _get_reader():
+def _get_reader() -> Any:
     """Lazy-load the GeoIP reader."""
     global _reader
     if _reader is None and GEOIP_AVAILABLE and GEOIP_DB_PATH.exists():
@@ -49,11 +51,11 @@ def _get_reader():
 def get_location(ip_address: str) -> dict[str, str | None]:
     """
     Resolve an IP address to geographic location.
-    
+
     Returns:
         Dict with 'country' and 'city' (or None if unavailable)
     """
-    result = {"country": None, "city": None}
+    result: dict[str, str | None] = {"country": None, "city": None}
 
     if not ip_address or ip_address in ("127.0.0.1", "::1", "localhost"):
         return result

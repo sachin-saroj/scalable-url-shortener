@@ -20,12 +20,19 @@ INDEXING STRATEGY:
 """
 
 from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy import (
-    BigInteger, String, Text, Boolean, DateTime, ForeignKey,
-    Index, text,
+    BigInteger,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Index,
+    String,
+    Text,
+    text,
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -34,17 +41,16 @@ from app.db.base import Base
 class URL(Base):
     __tablename__ = "urls"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
-    short_code: Mapped[str] = mapped_column(
-        String(20), unique=True, nullable=True, index=True
-    )
-    original_url: Mapped[str] = mapped_column(
-        Text, nullable=False
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    original_url: Mapped[str] = mapped_column(Text, nullable=False)
+    short_code: Mapped[str | None] = mapped_column(
+        String(10), unique=True, nullable=True, index=True
     )
     custom_alias: Mapped[str | None] = mapped_column(
-        String(50), unique=True, nullable=True
+        String(50),
+        unique=True,
+        nullable=True,
+        index=True,
     )
     user_id = mapped_column(
         UUID(as_uuid=True),
@@ -57,15 +63,9 @@ class URL(Base):
         nullable=False,
         server_default=text("NOW()"),
     )
-    expires_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    is_active: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default="true"
-    )
-    metadata_: Mapped[dict | None] = mapped_column(
-        "metadata", JSONB, nullable=True
-    )
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
+    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
 
     # Relationships
     user = relationship("User", back_populates="urls", lazy="selectin")

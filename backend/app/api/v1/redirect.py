@@ -13,16 +13,15 @@ DESIGN DECISIONS:
 - Redis checked first, DB only on cache miss
 """
 
-from fastapi import APIRouter, HTTPException, status, Request, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
+from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Depends
 
-from app.dependencies import get_db, get_cache
-from app.services.url_service import URLService
+from app.dependencies import get_cache, get_db
 from app.services.analytics_service import AnalyticsService
 from app.services.cache_service import CacheService
 from app.services.geo_service import get_location
-from fastapi.responses import RedirectResponse
+from app.services.url_service import URLService
 
 router = APIRouter()
 
@@ -43,12 +42,12 @@ async def redirect_to_url(
 ):
     """
     The redirect endpoint — HOT PATH.
-    
+
     Flow:
     1. Resolve short_code → original_url (cache → DB)
     2. Fire background task to record click
     3. Return 302 redirect immediately
-    
+
     WHY BackgroundTasks?
     - Click recording happens AFTER the response is sent
     - User doesn't wait for DB write
@@ -77,7 +76,7 @@ async def redirect_to_url(
     # Extract client info for analytics
     client_ip = request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
     if not client_ip:
-        client_ip = request.client.host if request.client else None
+        client_ip = request.client.host if request.client else "unknown"
 
     user_agent = request.headers.get("User-Agent")
     referer = request.headers.get("Referer")
@@ -108,7 +107,7 @@ async def _record_click_background(
 ):
     """
     Background task to record a click.
-    
+
     Runs after the redirect response is sent.
     Failure here does NOT affect the user experience.
     """
@@ -129,4 +128,5 @@ async def _record_click_background(
     except Exception as e:
         # Log but don't crash — analytics failure is non-critical
         import logging
+
         logging.getLogger(__name__).error(f"Click recording failed: {e}")

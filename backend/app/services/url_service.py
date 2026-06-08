@@ -17,19 +17,20 @@ COMMON MISTAKES AVOIDED:
 """
 
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select, func, update
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.url import URL
+from app.config import get_settings
 from app.models.click import Click
+from app.models.url import URL
 from app.schemas.url import URLCreateRequest, URLResponse
 from app.services.cache_service import CacheService
 from app.utils.base62 import encode_id
 from app.utils.validators import is_valid_url, sanitize_url
-from app.config import get_settings
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -38,11 +39,11 @@ settings = get_settings()
 class URLService:
     """
     Handles URL creation, retrieval, and management.
-    
+
     DEPENDENCY INJECTION:
     - db: AsyncSession (database operations)
     - cache: CacheService (Redis caching)
-    
+
     WHY inject dependencies?
     - Testable: mock db/cache in unit tests
     - Flexible: swap implementations without changing logic
@@ -60,7 +61,7 @@ class URLService:
     ) -> URLResponse:
         """
         Create a shortened URL.
-        
+
         FLOW:
         1. Sanitize and validate the URL
         2. Check for duplicate (idempotent for same user + URL)
@@ -70,7 +71,7 @@ class URLService:
         6. Update record with short code
         7. Cache in Redis
         8. Return response
-        
+
         IDEMPOTENCY:
         If the same user submits the same URL again, we return the
         existing short code instead of creating a duplicate.
@@ -91,16 +92,12 @@ class URLService:
         if request.custom_alias:
             alias_exists = await self._check_alias_exists(request.custom_alias)
             if alias_exists:
-                raise ValueError(
-                    f"Custom alias '{request.custom_alias}' is already taken"
-                )
+                raise ValueError(f"Custom alias '{request.custom_alias}' is already taken")
 
         # Step 4: Calculate expiry
         expires_at = None
         if request.expires_in_hours:
-            expires_at = datetime.now(timezone.utc) + timedelta(
-                hours=request.expires_in_hours
-            )
+            expires_at = datetime.now(timezone.utc) + timedelta(hours=request.expires_in_hours)
 
         # Step 5: Insert URL record
         url_record = URL(
@@ -136,19 +133,19 @@ class URLService:
     async def get_original_url(self, code: str) -> tuple[str, int]:
         """
         Resolve a short code to the original URL.
-        
+
         This is the HOT PATH — must be as fast as possible.
-        
+
         FLOW:
         1. Check Redis cache (sub-ms)
         2. If miss → query PostgreSQL
         3. Check if expired → return 410
         4. Cache the result for next time
         5. Return original URL + URL id (for click tracking)
-        
+
         Returns:
             Tuple of (original_url, url_id)
-        
+
         Raises:
             LookupError: URL not found (404)
             ValueError: URL has expired (410)
@@ -191,9 +188,7 @@ class URLService:
         # Step 4: Cache for next time
         cache_ttl = settings.URL_CACHE_TTL
         if url_record.expires_at:
-            remaining = (
-                url_record.expires_at - datetime.now(timezone.utc)
-            ).total_seconds()
+            remaining = (url_record.expires_at - datetime.now(timezone.utc)).total_seconds()
             cache_ttl = min(cache_ttl, int(remaining))
         await self.cache.set_url(code, url_record.original_url, ttl=cache_ttl)
 
@@ -204,17 +199,17 @@ class URLService:
         user_id: UUID,
         page: int = 1,
         per_page: int = 20,
-    ) -> tuple[list[dict], int]:
+    ) -> tuple[list[dict[str, Any]], int]:
         """
         Get paginated list of URLs created by a user.
-        
+
         Returns:
             Tuple of (url_list, total_count)
         """
         # Count total
         count_query = select(func.count(URL.id)).where(
             URL.user_id == user_id,
-            URL.is_active == True,
+            URL.is_active.is_(True),
         )
         total_result = await self.db.execute(count_query)
         total = total_result.scalar() or 0
@@ -223,7 +218,7 @@ class URLService:
         offset = (page - 1) * per_page
         query = (
             select(URL)
-            .where(URL.user_id == user_id, URL.is_active == True)
+            .where(URL.user_id == user_id, URL.is_active.is_(True))
             .order_by(URL.created_at.desc())
             .offset(offset)
             .limit(per_page)
@@ -235,16 +230,18 @@ class URLService:
         url_list = []
         for url in urls:
             click_count = await self._get_click_count(url.id)
-            url_list.append({
-                "short_code": url.effective_code,
-                "short_url": f"{settings.BASE_URL}/{url.effective_code}",
-                "original_url": url.original_url,
-                "total_clicks": click_count,
-                "created_at": url.created_at,
-                "expires_at": url.expires_at,
-                "is_active": url.is_active,
-                "custom_alias": url.custom_alias,
-            })
+            url_list.append(
+                {
+                    "short_code": url.effective_code,
+                    "short_url": f"{settings.BASE_URL}/{url.effective_code}",
+                    "original_url": url.original_url,
+                    "total_clicks": click_count,
+                    "created_at": url.created_at,
+                    "expires_at": url.expires_at,
+                    "is_active": url.is_active,
+                    "custom_alias": url.custom_alias,
+                }
+            )
 
         return url_list, total
 
@@ -263,13 +260,11 @@ class URLService:
 
     # ── Private Helpers ────────────────────────────────
 
-    async def _find_existing_url(
-        self, original_url: str, user_id: UUID | None
-    ) -> URL | None:
+    async def _find_existing_url(self, original_url: str, user_id: UUID | None) -> URL | None:
         """Find existing URL for idempotency check."""
         query = select(URL).where(
             URL.original_url == original_url,
-            URL.is_active == True,
+            URL.is_active.is_(True),
         )
         if user_id:
             query = query.where(URL.user_id == user_id)
@@ -281,9 +276,7 @@ class URLService:
 
     async def _find_by_code(self, code: str) -> URL | None:
         """Find URL by short_code or custom_alias."""
-        query = select(URL).where(
-            (URL.short_code == code) | (URL.custom_alias == code)
-        )
+        query = select(URL).where((URL.short_code == code) | (URL.custom_alias == code))
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 

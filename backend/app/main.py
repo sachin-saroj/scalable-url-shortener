@@ -17,15 +17,15 @@ import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.config import get_settings
-from app.api.v1.router import router as api_v1_router
 from app.api.v1.redirect import router as redirect_router
-from app.dependencies import get_redis, close_redis
+from app.api.v1.router import router as api_v1_router
+from app.config import get_settings
+from app.dependencies import close_redis, get_redis
 
 settings = get_settings()
 
@@ -43,11 +43,11 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """
     Startup and shutdown lifecycle management.
-    
+
     Startup:
     - Verify Redis connectivity
     - Log configuration info
-    
+
     Shutdown:
     - Close Redis connection pool
     """
@@ -120,6 +120,7 @@ async def security_and_request_id_middleware(request: Request, call_next):
 # ── Exception Helpers ─────────────────────────────────
 def get_error_code(status_code: int) -> str:
     from fastapi import status
+
     mapping = {
         status.HTTP_400_BAD_REQUEST: "BAD_REQUEST",
         status.HTTP_401_UNAUTHORIZED: "UNAUTHORIZED",
@@ -142,8 +143,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         request_id = str(uuid.uuid4())
 
     logger.error(
-        f"HTTP exception: status_code={exc.status_code} "
-        f"detail={exc.detail} request_id={request_id}"
+        f"HTTP exception: status_code={exc.status_code} detail={exc.detail} request_id={request_id}"
     )
 
     return JSONResponse(
@@ -212,7 +212,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 async def health_check():
     """
     Health check endpoint for load balancers and monitoring.
-    
+
     Returns status of all dependencies.
     """
     health = {"status": "healthy", "service": settings.APP_NAME}

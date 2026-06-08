@@ -11,6 +11,7 @@ WHY server-side QR generation?
 """
 
 import io
+
 import qrcode
 from qrcode.constants import ERROR_CORRECT_H
 
@@ -18,11 +19,11 @@ from qrcode.constants import ERROR_CORRECT_H
 def generate_qr_code(url: str, size: int = 10) -> bytes:
     """
     Generate a QR code PNG image for a URL.
-    
+
     Args:
         url: The full URL to encode
         size: Box size in pixels (default 10)
-    
+
     Returns:
         PNG image as bytes
     """
@@ -39,7 +40,7 @@ def generate_qr_code(url: str, size: int = 10) -> bytes:
 
     # Convert to bytes
     buffer = io.BytesIO()
-    img.save(buffer, format="PNG")
+    img.save(buffer, format="PNG")  # type: ignore[call-arg]
     buffer.seek(0)
 
     return buffer.getvalue()

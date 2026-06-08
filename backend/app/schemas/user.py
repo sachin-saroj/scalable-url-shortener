@@ -4,26 +4,33 @@ User / Auth Schemas
 Pydantic models for authentication endpoints.
 """
 
-from datetime import datetime
-from pydantic import BaseModel, Field, EmailStr, field_validator
 import re
 import uuid
+from datetime import datetime
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class UserRegisterRequest(BaseModel):
     """Request body for POST /auth/register"""
+
     email: str = Field(
-        ..., max_length=255,
+        ...,
+        max_length=255,
         description="User email address",
         examples=["user@example.com"],
     )
     username: str = Field(
-        ..., min_length=3, max_length=50,
+        ...,
+        min_length=3,
+        max_length=50,
         description="Username (3-50 chars, alphanumeric + underscores)",
         examples=["johndoe"],
     )
     password: str = Field(
-        ..., min_length=8, max_length=128,
+        ...,
+        min_length=8,
+        max_length=128,
         description="Password (min 8 chars, must include uppercase, lowercase, digit)",
         examples=["SecureP@ss123"],
     )
@@ -58,6 +65,7 @@ class UserRegisterRequest(BaseModel):
 
 class UserLoginRequest(BaseModel):
     """Request body for POST /auth/login"""
+
     email: str = Field(..., description="User email")
     password: str = Field(..., description="User password")
 
@@ -69,6 +77,7 @@ class UserLoginRequest(BaseModel):
 
 class TokenResponse(BaseModel):
     """JWT token response."""
+
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
@@ -77,6 +86,7 @@ class TokenResponse(BaseModel):
 
 class UserResponse(BaseModel):
     """Public user info."""
+
     id: uuid.UUID
     email: str
     username: str
@@ -88,4 +98,5 @@ class UserResponse(BaseModel):
 
 class RefreshTokenRequest(BaseModel):
     """Request body for POST /auth/refresh"""
+
     refresh_token: str

@@ -12,8 +12,9 @@ WHY pydantic-settings?
 """
 
 from functools import lru_cache
-from pydantic_settings import BaseSettings, SettingsConfigDict
+
 from pydantic import model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -102,7 +103,11 @@ class Settings(BaseSettings):
             filtered = []
             for origin in origins:
                 lower_origin = origin.lower()
-                if "localhost" in lower_origin or "127.0.0.1" in lower_origin or "0.0.0.0" in lower_origin:
+                if (
+                    "localhost" in lower_origin
+                    or "127.0.0.1" in lower_origin
+                    or "0.0.0.0" in lower_origin
+                ):
                     continue
                 if origin == "*":
                     continue
@@ -113,16 +118,29 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_secrets(self) -> "Settings":
         # Check JWT_SECRET_KEY
-        if self.JWT_SECRET_KEY in ("change-this-to-a-very-long-random-string-in-production", "change-me", ""):
+        if self.JWT_SECRET_KEY in (
+            "change-this-to-a-very-long-random-string-in-production",
+            "change-me",
+            "",
+        ):
             raise RuntimeError("JWT_SECRET_KEY must be changed from the default value.")
 
         # Check SECRET_KEY
-        if self.SECRET_KEY in ("change-me", "change-this-to-a-very-long-random-string-in-production", ""):
+        if self.SECRET_KEY in (
+            "change-me",
+            "change-this-to-a-very-long-random-string-in-production",
+            "",
+        ):
             raise RuntimeError("SECRET_KEY must be changed from the default value.")
 
         # Construct or validate DATABASE_URL
         if not self.DATABASE_URL:
-            if self.POSTGRES_USER and self.POSTGRES_PASSWORD and self.POSTGRES_HOST and self.POSTGRES_DB:
+            if (
+                self.POSTGRES_USER
+                and self.POSTGRES_PASSWORD
+                and self.POSTGRES_HOST
+                and self.POSTGRES_DB
+            ):
                 self.DATABASE_URL = (
                     f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
                     f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
@@ -133,11 +151,11 @@ class Settings(BaseSettings):
         return self
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """
     Cached settings instance.
-    
+
     WHY lru_cache?
     - Settings are read-only after startup
     - Parsing .env on every request is wasteful

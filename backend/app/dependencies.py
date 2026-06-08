@@ -13,16 +13,16 @@ WHY dependency injection?
 import logging
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.db.session import get_db
+from app.db.session import get_db as get_db
 from app.models.user import User
-from app.services.cache_service import CacheService
 from app.services.auth_service import AuthService
+from app.services.cache_service import CacheService
 from app.utils.rate_limiter import RateLimiter
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ async def get_redis() -> Redis:
     return _redis
 
 
-async def close_redis():
+async def close_redis() -> None:
     """Close Redis connection (called on shutdown)."""
     global _redis
     if _redis:
@@ -58,12 +58,14 @@ async def close_redis():
 
 # ── Cache Service ─────────────────────────────────────
 
+
 async def get_cache(redis: Redis = Depends(get_redis)) -> CacheService:
     """Inject CacheService with Redis connection."""
     return CacheService(redis)
 
 
 # ── Rate Limiter ──────────────────────────────────────
+
 
 async def get_rate_limiter(redis: Redis = Depends(get_redis)) -> RateLimiter:
     """Inject RateLimiter with Redis connection."""
@@ -77,10 +79,11 @@ async def get_rate_limiter(redis: Redis = Depends(get_redis)) -> RateLimiter:
 class RateLimitRule:
     """
     Customizable rate limiting dependency creator.
-    
+
     Allows customizing max_requests and window_seconds per endpoint,
     while scoping keys to the endpoint path to prevent starvation.
     """
+
     def __init__(self, max_requests: int | None = None, window_seconds: int | None = None):
         self.max_requests = max_requests
         self.window_seconds = window_seconds
@@ -100,7 +103,11 @@ class RateLimitRule:
 
         # Apply limits (fallback to settings if not customized)
         limit = self.max_requests if self.max_requests is not None else settings.RATE_LIMIT_REQUESTS
-        window = self.window_seconds if self.window_seconds is not None else settings.RATE_LIMIT_WINDOW_SECONDS
+        window = (
+            self.window_seconds
+            if self.window_seconds is not None
+            else settings.RATE_LIMIT_WINDOW_SECONDS
+        )
 
         limiter = RateLimiter(redis, max_requests=limit, window_seconds=window)
         allowed, info = await limiter.is_allowed(identifier)
@@ -120,6 +127,7 @@ check_auth_rate_limit = RateLimitRule(max_requests=5, window_seconds=60)
 
 
 # ── Authentication ────────────────────────────────────
+
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),

@@ -9,9 +9,9 @@ SECURITY NOTE:
 - Prevent SSRF by blocking private/internal IPs
 """
 
-import re
-import logging
 import ipaddress
+import logging
+import re
 import socket
 from urllib.parse import urlparse
 
@@ -28,22 +28,22 @@ BLOCKED_PATTERNS = [
 
 # Private IP patterns for string-based SSRF blocking
 PRIVATE_IP_PATTERNS = [
-    r"^127\.",                           # Loopback (127.x.x.x)
-    r"^10\.",                            # Private class A (10.x.x.x)
-    r"^172\.(1[6-9]|2[0-9]|3[0-1])\.",   # Private class B (172.16.x.x - 172.31.x.x)
-    r"^192\.168\.",                      # Private class C (192.168.x.x)
-    r"^0\.",                             # Unspecified / system (0.x.x.x)
-    r"^169\.254\.",                      # Link-local (169.254.x.x)
-    r"^localhost",                       # Localhost hostname
-    r"^::1$",                            # IPv6 Loopback
-    r"^\[::1\]",                         # IPv6 Loopback bracketed
+    r"^127\.",  # Loopback (127.x.x.x)
+    r"^10\.",  # Private class A (10.x.x.x)
+    r"^172\.(1[6-9]|2[0-9]|3[0-1])\.",  # Private class B (172.16.x.x - 172.31.x.x)
+    r"^192\.168\.",  # Private class C (192.168.x.x)
+    r"^0\.",  # Unspecified / system (0.x.x.x)
+    r"^169\.254\.",  # Link-local (169.254.x.x)
+    r"^localhost",  # Localhost hostname
+    r"^::1$",  # IPv6 Loopback
+    r"^\[::1\]",  # IPv6 Loopback bracketed
 ]
 
 
 def is_valid_url(url: str) -> tuple[bool, str]:
     """
     Validate URL format and safety (including SSRF protection).
-    
+
     Returns:
         Tuple of (is_valid, error_message)
     """
@@ -81,7 +81,13 @@ def is_valid_url(url: str) -> tuple[bool, str]:
     # 2. IP address check (if hostname is a raw IP)
     try:
         ip = ipaddress.ip_address(hostname_lower)
-        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_unspecified or ip.is_reserved:
+        if (
+            ip.is_private
+            or ip.is_loopback
+            or ip.is_link_local
+            or ip.is_unspecified
+            or ip.is_reserved
+        ):
             return False, "URLs pointing to private/internal addresses are not allowed"
     except ValueError:
         # Hostname is not an IP address, which is normal for domains
@@ -94,7 +100,13 @@ def is_valid_url(url: str) -> tuple[bool, str]:
             ip_str = info[4][0]
             try:
                 ip = ipaddress.ip_address(ip_str)
-                if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_unspecified or ip.is_reserved:
+                if (
+                    ip.is_private
+                    or ip.is_loopback
+                    or ip.is_link_local
+                    or ip.is_unspecified
+                    or ip.is_reserved
+                ):
                     return False, "URLs pointing to private/internal addresses are not allowed"
             except ValueError:
                 pass
@@ -125,11 +137,11 @@ def sanitize_url(url: str) -> str:
     """
     # Strip whitespace
     url = url.strip()
-    
+
     # Remove null bytes
     url = url.replace("\x00", "")
-    
+
     # Remove control characters
     url = re.sub(r"[\x01-\x1f\x7f]", "", url)
-    
+
     return url

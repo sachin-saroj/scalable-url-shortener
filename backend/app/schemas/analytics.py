@@ -5,6 +5,7 @@ Response models for analytics endpoints.
 """
 
 from datetime import date, datetime
+
 from pydantic import BaseModel
 
 
@@ -21,6 +22,7 @@ class DayClicks(BaseModel):
 
 class AnalyticsResponse(BaseModel):
     """Full analytics for a single short URL."""
+
     short_code: str
     original_url: str
     total_clicks: int

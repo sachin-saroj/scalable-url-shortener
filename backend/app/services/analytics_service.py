@@ -15,12 +15,12 @@ PERFORMANCE:
 """
 
 import logging
-from datetime import datetime, timezone, timedelta, date
+from datetime import date, datetime, timedelta, timezone
+from typing import Any
 
-from sqlalchemy import select, func, text, and_
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.url import URL
 from app.models.click import Click
 from app.models.daily_analytics import DailyAnalytics
 from app.services.cache_service import CacheService
@@ -47,10 +47,10 @@ class AnalyticsService:
     ) -> None:
         """
         Record a click event.
-        
+
         This is called AFTER the redirect response is sent
         to avoid adding latency to the redirect.
-        
+
         Also tracks unique clicks via Redis SET.
         """
         try:
@@ -72,18 +72,16 @@ class AnalyticsService:
                 short_code, ip_address or "unknown", today
             )
 
-            logger.debug(
-                f"Click recorded: {short_code} | IP: {ip_address} | Unique: {is_unique}"
-            )
+            logger.debug(f"Click recorded: {short_code} | IP: {ip_address} | Unique: {is_unique}")
 
         except Exception as e:
             logger.error(f"Failed to record click for {short_code}: {e}")
             # Don't raise — click recording failure shouldn't break anything
 
-    async def get_analytics(self, short_code: str, url_id: int) -> dict:
+    async def get_analytics(self, short_code: str, url_id: int) -> dict[str, Any]:
         """
         Get full analytics for a URL.
-        
+
         OPTIMIZATION:
         1. Check cache first (60s TTL)
         2. If miss → aggregate from DB
@@ -102,9 +100,9 @@ class AnalyticsService:
         total_clicks = total_result.scalar() or 0
 
         # Unique clicks (distinct IPs)
-        unique_query = select(
-            func.count(func.distinct(Click.ip_address))
-        ).where(Click.url_id == url_id)
+        unique_query = select(func.count(func.distinct(Click.ip_address))).where(
+            Click.url_id == url_id
+        )
         unique_result = await self.db.execute(unique_query)
         unique_clicks = unique_result.scalar() or 0
 
@@ -138,10 +136,7 @@ class AnalyticsService:
             .limit(10)
         )
         countries_result = await self.db.execute(countries_query)
-        top_countries = [
-            {"country": row.country, "clicks": row.count}
-            for row in countries_result
-        ]
+        top_countries = [{"country": row.country, "clicks": row.count} for row in countries_result]
 
         # Clicks by day (last 30 days)
         month_ago = now - timedelta(days=30)
@@ -184,15 +179,13 @@ class AnalyticsService:
         """
         Aggregate clicks into daily_analytics table.
         Called by background worker.
-        
+
         Returns number of records upserted.
         """
         if target_date is None:
             target_date = (datetime.now(timezone.utc) - timedelta(days=1)).date()
 
-        start = datetime.combine(target_date, datetime.min.time()).replace(
-            tzinfo=timezone.utc
-        )
+        start = datetime.combine(target_date, datetime.min.time()).replace(tzinfo=timezone.utc)
         end = start + timedelta(days=1)
 
         # Aggregate clicks grouped by url_id
