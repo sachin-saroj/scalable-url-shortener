@@ -47,7 +47,8 @@ class Settings(BaseSettings):
         """Synchronous URL for Alembic migrations."""
         if not self.DATABASE_URL:
             raise RuntimeError("DATABASE_URL is missing.")
-        return self.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+        url = self.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+        return url.replace("sqlite+aiosqlite://", "sqlite://")
 
     # ── Redis ──────────────────────────────────
     REDIS_HOST: str = "redis"
