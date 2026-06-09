@@ -133,9 +133,7 @@ class CacheService:
             logger.warning(f"Redis analytics GET error: {e}")
             return None
 
-    async def set_analytics(
-        self, short_code: str, data: dict[str, Any], ttl: int = 60
-    ) -> bool:
+    async def set_analytics(self, short_code: str, data: dict[str, Any], ttl: int = 60) -> bool:
         """Cache analytics response (short TTL since data changes frequently)."""
         try:
             await cast(

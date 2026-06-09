@@ -93,7 +93,7 @@ class URL(Base):
     @property
     def effective_code(self) -> str:
         """Return custom_alias if set, otherwise short_code."""
-        return self.custom_alias or self.short_code
+        return self.custom_alias or self.short_code or ""
 
     def __repr__(self) -> str:
         return f"<URL {self.short_code} → {self.original_url[:50]}>"

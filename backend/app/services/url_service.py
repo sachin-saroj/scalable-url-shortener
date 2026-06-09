@@ -294,7 +294,7 @@ class URLService:
 
     def _build_response(self, url: URL) -> URLResponse:
         """Build API response from URL model."""
-        effective_code = url.custom_alias or url.short_code
+        effective_code = url.effective_code
         return URLResponse(
             short_code=effective_code,
             short_url=f"{settings.BASE_URL}/{effective_code}",
