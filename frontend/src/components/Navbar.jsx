@@ -15,8 +15,7 @@ export default function Navbar() {
   return (
     <nav className="navbar" id="main-navbar">
       <Link to="/" className="navbar-brand">
-        <div className="logo-icon">⚡</div>
-        LinkForge
+        LinkForge®
       </Link>
 
       <div className="navbar-links">
@@ -32,9 +31,11 @@ export default function Navbar() {
             <span style={{
               color: 'var(--text-tertiary)',
               fontSize: '0.8rem',
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 700,
               padding: '0 0.5rem',
             }}>
-              {user?.username}
+              [{user?.username?.toUpperCase()}]
             </span>
             <button className="nav-link" onClick={logout} id="logout-btn">
               Logout
