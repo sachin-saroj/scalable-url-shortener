@@ -176,6 +176,10 @@ test_session_maker = async_sessionmaker(
     expire_on_commit=False,
 )
 
+from app.db import session as db_session_module
+
+db_session_module.async_session_factory = test_session_maker
+
 
 @pytest_asyncio.fixture
 async def db_session():

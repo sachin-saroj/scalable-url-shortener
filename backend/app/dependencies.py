@@ -14,7 +14,7 @@ import logging
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import HTTPBearer
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -130,14 +130,25 @@ check_auth_rate_limit = RateLimitRule(max_requests=5, window_seconds=60)
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """
     Mandatory authentication dependency.
     Raises 401 if token is invalid or missing.
+    Supports both Authorization Bearer header and access_token cookie.
     """
-    if not credentials:
+    token = None
+    auth_header = request.headers.get("Authorization")
+    if   auth_header:
+        parts = auth_header.split(" ")
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            token = parts[1]
+
+    if not token:
+        token = request.cookies.get("access_token")
+
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required",
@@ -146,7 +157,7 @@ async def get_current_user(
 
     auth_service = AuthService(db)
     try:
-        user = await auth_service.get_current_user(credentials.credentials)
+        user = await auth_service.get_current_user(token)
         return user
     except ValueError as e:
         raise HTTPException(
@@ -157,20 +168,31 @@ async def get_current_user(
 
 
 async def get_optional_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> User | None:
     """
     Optional authentication dependency.
     Returns None if no token provided (allows anonymous access).
     Raises 401 only if token is present but invalid.
+    Supports both Authorization Bearer header and access_token cookie.
     """
-    if not credentials:
+    token = None
+    auth_header = request.headers.get("Authorization")
+    if   auth_header:
+        parts = auth_header.split(" ")
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            token = parts[1]
+
+    if not token:
+        token = request.cookies.get("access_token")
+
+    if not token:
         return None
 
     auth_service = AuthService(db)
     try:
-        user = await auth_service.get_current_user(credentials.credentials)
+        user = await auth_service.get_current_user(token)
         return user
     except ValueError as e:
         raise HTTPException(
