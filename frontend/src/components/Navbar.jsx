@@ -28,14 +28,20 @@ export default function Navbar() {
             <Link to="/dashboard" className={isActive('/dashboard')}>
               <span>Dashboard</span>
             </Link>
+            <Link to="/issues" className={isActive('/issues')}>
+              <span>Issues</span>
+            </Link>
+            <Link to="/pulls" className={isActive('/pulls')}>
+              <span>Pull Requests</span>
+            </Link>
             <span style={{
               color: 'var(--text-tertiary)',
-              fontSize: '0.8rem',
+              fontSize: '0.75rem',
               fontFamily: 'var(--font-mono)',
-              fontWeight: 700,
+              fontWeight: 600,
               padding: '0 0.5rem',
             }}>
-              [{user?.username?.toUpperCase()}]
+              [{user?.username}]
             </span>
             <button className="nav-link" onClick={logout} id="logout-btn">
               Logout

@@ -75,7 +75,7 @@ export default function Register() {
             <input
               type="text"
               className="form-input"
-              placeholder="johndoe"
+              placeholder="alex_dev"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               id="reg-username"

@@ -81,7 +81,7 @@ export default function ShortenForm({ onSuccess }) {
             {loading ? (
               <div className="spinner" />
             ) : (
-              <>✨ Shorten</>
+              'Shorten'
             )}
           </button>
         </div>
@@ -92,10 +92,20 @@ export default function ShortenForm({ onSuccess }) {
           type="button"
           className="btn btn-secondary btn-sm"
           onClick={() => setShowOptions(!showOptions)}
-          style={{ marginTop: '1rem' }}
+          style={{ marginTop: '1rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           id="toggle-options"
         >
-          {showOptions ? '▲ Hide options' : '▼ More options'}
+          {showOptions ? (
+            <>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+              Hide options
+            </>
+          ) : (
+            <>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              More options
+            </>
+          )}
         </button>
 
         {showOptions && (
@@ -130,20 +140,41 @@ export default function ShortenForm({ onSuccess }) {
 
       {result && (
         <div className="result-card" id="result-card">
-          <p className="result-label">✅ Link created successfully!</p>
+          <p className="result-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Link created successfully!
+          </p>
           <div className="result-url">
             <span className="result-url-text" id="result-url">{result.short_url}</span>
             <button
               className="btn btn-secondary btn-sm"
               onClick={handleCopy}
               id="copy-btn"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              {copied ? '✓ Copied!' : '📋 Copy'}
+              {copied ? (
+                <>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  Copy
+                </>
+              )}
             </button>
             <a
               href={`/api/v1/qr/${result.short_code}`}
               target="_blank"
-              rel="noopener"
+              rel="noopener noreferrer"
               className="btn btn-secondary btn-sm"
               id="qr-btn"
             >

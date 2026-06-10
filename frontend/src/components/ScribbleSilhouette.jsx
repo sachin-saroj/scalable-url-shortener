@@ -49,7 +49,7 @@ export default function ScribbleSilhouette() {
       ctx.fillRect(0, 0, width, height);
 
       // Scribble lines styling
-      ctx.strokeStyle = '#000000';
+      ctx.strokeStyle = '#111111';
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
@@ -96,9 +96,9 @@ export default function ScribbleSilhouette() {
           ctx.moveTo(p.x, p.y);
           ctx.lineTo(points[idx - 1].x, points[idx - 1].y);
           ctx.lineWidth = 0.5;
-          ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
+          ctx.strokeStyle = 'rgba(17, 17, 17, 0.15)';
           ctx.stroke();
-          ctx.strokeStyle = '#000000'; // Reset
+          ctx.strokeStyle = '#111111'; // Reset
         }
       });
 
@@ -135,9 +135,9 @@ export default function ScribbleSilhouette() {
         width: '300px',
         height: '300px',
         background: '#ffffff',
-        border: '2px solid #000000',
+        border: '1px solid var(--border-color)',
         borderRadius: 'var(--radius-md)',
-        boxShadow: 'var(--shadow-flat)',
+        boxShadow: 'var(--shadow-subtle)',
         cursor: 'crosshair',
         overflow: 'hidden',
         display: 'flex',
@@ -182,17 +182,17 @@ export default function ScribbleSilhouette() {
         <path 
           d={silhouettePath} 
           fill="none" 
-          stroke="#000000" 
-          strokeWidth="3.5"
+          stroke="var(--accent-primary)" 
+          strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
 
         {/* Technical crosshair overlays */}
-        <line x1="150" y1="10" x2="150" y2="30" stroke="#000000" strokeWidth="1" />
-        <line x1="150" y1="270" x2="150" y2="290" stroke="#000000" strokeWidth="1" />
-        <line x1="10" y1="150" x2="30" y2="150" stroke="#000000" strokeWidth="1" />
-        <line x1="270" y1="150" x2="290" y2="150" stroke="#000000" strokeWidth="1" />
+        <line x1="150" y1="10" x2="150" y2="30" stroke="var(--border-color)" strokeWidth="1" />
+        <line x1="150" y1="270" x2="150" y2="290" stroke="var(--border-color)" strokeWidth="1" />
+        <line x1="10" y1="150" x2="30" y2="150" stroke="var(--border-color)" strokeWidth="1" />
+        <line x1="270" y1="150" x2="290" y2="150" stroke="var(--border-color)" strokeWidth="1" />
       </svg>
 
       {/* Clipped Canvas for scribbling */}
@@ -213,7 +213,7 @@ export default function ScribbleSilhouette() {
           left: '12px',
           fontFamily: 'var(--font-mono)',
           fontSize: '0.65rem',
-          background: '#000000',
+          background: 'var(--accent-primary)',
           color: '#ffffff',
           padding: '2px 6px',
           borderRadius: '2px',

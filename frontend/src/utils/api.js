@@ -12,17 +12,15 @@ class ApiClient {
   }
 
   getToken() {
-    return localStorage.getItem('access_token');
+    return null;
   }
 
   setTokens(access, refresh) {
-    localStorage.setItem('access_token', access);
-    localStorage.setItem('refresh_token', refresh);
+    // Cookies set automatically by the backend
   }
 
   clearTokens() {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
+    // Cookies cleared automatically by backend logout
   }
 
   async request(path, options = {}) {
@@ -32,25 +30,26 @@ class ApiClient {
       ...options.headers,
     };
 
-    const token = this.getToken();
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
     const response = await fetch(url, {
       ...options,
       headers,
+      credentials: 'include',
     });
 
-    if (response.status === 401) {
+    if (response.status === 401 && !path.startsWith('/auth/login') && !path.startsWith('/auth/register')) {
       // Try refresh token
       const refreshed = await this.tryRefresh();
       if (refreshed) {
-        headers['Authorization'] = `Bearer ${this.getToken()}`;
-        return fetch(url, { ...options, headers });
+        return fetch(url, {
+          ...options,
+          headers,
+          credentials: 'include',
+        });
       }
-      this.clearTokens();
-      window.location.href = '/login';
+      const isPublicPage = ['/', '/login', '/register'].includes(window.location.pathname);
+      if (!isPublicPage) {
+        window.location.href = '/login';
+      }
       throw new Error('Session expired');
     }
 
@@ -58,25 +57,24 @@ class ApiClient {
   }
 
   async tryRefresh() {
-    const refreshToken = localStorage.getItem('refresh_token');
-    if (!refreshToken) return false;
-
     try {
       const res = await fetch(`${this.baseUrl}/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: refreshToken }),
+        credentials: 'include',
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        this.setTokens(data.access_token, data.refresh_token);
-        return true;
-      }
-      return false;
+      return res.ok;
     } catch {
       return false;
     }
+  }
+
+  async logout() {
+    const res = await this.request('/auth/logout', {
+      method: 'POST',
+    });
+    return { ok: res.ok };
   }
 
   // ── Auth ────────────────────────────────────
@@ -111,6 +109,11 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify(body),
     });
+    return { ok: res.ok, status: res.status, data: await res.json() };
+  }
+
+  async getDashboardStats() {
+    const res = await this.request('/urls/stats');
     return { ok: res.ok, status: res.status, data: await res.json() };
   }
 

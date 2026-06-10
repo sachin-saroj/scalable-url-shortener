@@ -53,10 +53,17 @@ export default function Analytics() {
     return (
       <div className="page-container">
         <div className="empty-state">
-          <div className="empty-state-icon">❌</div>
+          <div className="empty-state-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+          </div>
           <h3 className="empty-state-title">{error}</h3>
-          <Link to="/dashboard" className="btn btn-primary" style={{ marginTop: '1rem' }}>
-            ← Back to Dashboard
+          <Link to="/dashboard" className="btn btn-primary" style={{ marginTop: '1rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Back to Dashboard
           </Link>
         </div>
       </div>
@@ -71,11 +78,15 @@ export default function Analytics() {
       <div className="page-header">
         <Link to="/dashboard" style={{
           fontSize: '0.85rem',
-          color: 'var(--text-tertiary)',
-          display: 'block',
-          marginBottom: '0.5rem',
+          color: 'var(--text-secondary)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '4px',
+          marginBottom: '0.75rem',
+          textDecoration: 'none'
         }}>
-          ← Back to Dashboard
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          Back to Dashboard
         </Link>
         <h1 className="page-title">Analytics: /{shortCode}</h1>
         <p className="page-subtitle" style={{
@@ -127,8 +138,22 @@ export default function Analytics() {
             <ul className="country-list">
               {data.top_countries.map((c, i) => (
                 <li className="country-item" key={i}>
-                  <span className="country-name">
-                    {getCountryFlag(c.country)} {c.country}
+                  <span className="country-name" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <span style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.7rem',
+                      background: 'var(--bg-primary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '4px',
+                      padding: '0.15rem 0.4rem',
+                      marginRight: '8px',
+                      color: 'var(--text-secondary)',
+                      lineHeight: '1',
+                      fontWeight: 500
+                    }}>
+                      {getCountryCode(c.country)}
+                    </span>
+                    {c.country}
                   </span>
                   <span className="country-clicks">{c.clicks.toLocaleString()}</span>
                 </li>
@@ -175,12 +200,19 @@ export default function Analytics() {
             <a
               href={`/api/v1/qr/${shortCode}`}
               target="_blank"
-              rel="noopener"
+              rel="noopener noreferrer"
               className="btn btn-secondary"
               id="download-qr"
-              style={{ width: '100%' }}
+              style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
             >
-              📱 Download QR Code
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <rect x="7" y="7" width="3" height="3"></rect>
+                <rect x="14" y="7" width="3" height="3"></rect>
+                <rect x="7" y="14" width="3" height="3"></rect>
+                <rect x="14" y="14" width="3" height="3"></rect>
+              </svg>
+              Download QR Code
             </a>
           </div>
         </div>
@@ -215,18 +247,18 @@ function InfoRow({ label, value, mono }) {
   );
 }
 
-function getCountryFlag(countryName) {
-  const flags = {
-    'United States': '🇺🇸',
-    'India': '🇮🇳',
-    'United Kingdom': '🇬🇧',
-    'Germany': '🇩🇪',
-    'France': '🇫🇷',
-    'Canada': '🇨🇦',
-    'Australia': '🇦🇺',
-    'Japan': '🇯🇵',
-    'Brazil': '🇧🇷',
-    'China': '🇨🇳',
+function getCountryCode(countryName) {
+  const codes = {
+    'United States': 'US',
+    'India': 'IN',
+    'United Kingdom': 'GB',
+    'Germany': 'DE',
+    'France': 'FR',
+    'Canada': 'CA',
+    'Australia': 'AU',
+    'Japan': 'JP',
+    'Brazil': 'BR',
+    'China': 'CN',
   };
-  return flags[countryName] || '🌍';
+  return codes[countryName] || 'GL'; // Global/Other
 }

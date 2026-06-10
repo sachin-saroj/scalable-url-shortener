@@ -18,21 +18,13 @@ export function AuthProvider({ children }) {
   }, []);
 
   async function checkAuth() {
-    const token = localStorage.getItem('access_token');
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
     try {
       const { ok, data } = await api.getMe();
       if (ok) {
         setUser(data);
-      } else {
-        api.clearTokens();
       }
     } catch {
-      api.clearTokens();
+      // Ignored, user is not logged in
     }
     setLoading(false);
   }
@@ -40,8 +32,7 @@ export function AuthProvider({ children }) {
   async function login(email, password) {
     const result = await api.login(email, password);
     if (result.ok) {
-      const { tokens, user: userData } = result.data;
-      api.setTokens(tokens.access_token, tokens.refresh_token);
+      const { user: userData } = result.data;
       setUser(userData);
     }
     return result;
@@ -50,15 +41,18 @@ export function AuthProvider({ children }) {
   async function register(email, username, password) {
     const result = await api.register(email, username, password);
     if (result.ok) {
-      const { tokens, user: userData } = result.data;
-      api.setTokens(tokens.access_token, tokens.refresh_token);
+      const { user: userData } = result.data;
       setUser(userData);
     }
     return result;
   }
 
-  function logout() {
-    api.clearTokens();
+  async function logout() {
+    try {
+      await api.logout();
+    } catch (err) {
+      console.error('Logout failed:', err);
+    }
     setUser(null);
   }
 

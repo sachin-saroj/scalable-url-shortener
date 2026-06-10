@@ -17,9 +17,34 @@ export default function Dashboard() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState(false);
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
   useEffect(() => {
     loadUrls();
   }, [page]);
+
+  async function loadStats() {
+    setStatsLoading(true);
+    setStatsError(false);
+    try {
+      const res = await api.getDashboardStats();
+      if (res.ok) {
+        setStats(res.data);
+      } else {
+        setStatsError(true);
+      }
+    } catch (err) {
+      console.error('Failed to load stats:', err);
+      setStatsError(true);
+    }
+    setStatsLoading(false);
+  }
 
   async function loadUrls() {
     setLoading(true);
@@ -38,17 +63,24 @@ export default function Dashboard() {
   function handleDelete(shortCode) {
     setUrls(urls.filter((u) => u.short_code !== shortCode));
     setTotal(total - 1);
+    loadStats();
   }
 
   function handleNewUrl() {
     // Reload first page to show new URL
     setPage(1);
     loadUrls();
+    loadStats();
   }
 
-  const totalClicks = urls.reduce((sum, u) => sum + (u.total_clicks || 0), 0);
-  const activeUrls = urls.filter((u) => u.is_active && !(u.expires_at && new Date(u.expires_at) < new Date()));
   const totalPages = Math.ceil(total / 20);
+
+  const renderStatValue = (value, formatter = (v) => v) => {
+    if (statsLoading) return '...';
+    if (statsError) return 'Error';
+    if (!stats) return '0';
+    return formatter(value);
+  };
 
   return (
     <div className="page-container">
@@ -61,21 +93,19 @@ export default function Dashboard() {
       <div className="stats-grid">
         <div className="stat-card" id="stat-total-urls">
           <div className="stat-label">Total Links</div>
-          <div className="stat-value">{total}</div>
+          <div className="stat-value">{renderStatValue(stats?.total_links)}</div>
         </div>
         <div className="stat-card" id="stat-active-urls">
           <div className="stat-label">Active Links</div>
-          <div className="stat-value">{activeUrls.length}</div>
+          <div className="stat-value">{renderStatValue(stats?.active_links)}</div>
         </div>
         <div className="stat-card" id="stat-total-clicks">
           <div className="stat-label">Total Clicks</div>
-          <div className="stat-value">{totalClicks.toLocaleString()}</div>
+          <div className="stat-value">{renderStatValue(stats?.total_clicks, (v) => v.toLocaleString())}</div>
         </div>
         <div className="stat-card" id="stat-avg-clicks">
           <div className="stat-label">Avg. Clicks/Link</div>
-          <div className="stat-value">
-            {urls.length > 0 ? Math.round(totalClicks / urls.length) : 0}
-          </div>
+          <div className="stat-value">{renderStatValue(stats?.average_clicks_per_link)}</div>
         </div>
       </div>
 
@@ -101,7 +131,12 @@ export default function Dashboard() {
           </div>
         ) : urls.length === 0 ? (
           <div className="empty-state" id="empty-state">
-            <div className="empty-state-icon">🔗</div>
+            <div className="empty-state-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+            </div>
             <h3 className="empty-state-title">No links yet</h3>
             <p>Create your first short link using the form above!</p>
           </div>
