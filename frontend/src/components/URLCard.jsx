@@ -46,7 +46,7 @@ export default function URLCard({ url, onDelete, index = 0 }) {
       <div className="url-card-info">
         {/* Primary: Short URL */}
         <div className="url-short">
-          <a href={url.short_url} target="_blank" rel="noopener noreferrer">
+          <a href={url.short_url} target="_blank" rel="noopener noreferrer" style={{ letterSpacing: '-0.01em' }}>
             {url.short_url.replace(/^https?:\/\//, '')}
           </a>
 
@@ -54,14 +54,10 @@ export default function URLCard({ url, onDelete, index = 0 }) {
           {isExpired ? (
             <span className="badge badge-expired">Expired</span>
           ) : (
-            <span style={{
-              width: 6,
-              height: 6,
-              borderRadius: '50%',
-              background: 'var(--status-success)',
-              display: 'inline-block',
-              flexShrink: 0,
-            }} title="Active" />
+            <span className="badge badge-active" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+              <span className="live-dot" style={{ width: 4, height: 4, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
+              ACTIVE
+            </span>
           )}
           {url.custom_alias && (
             <span className="badge badge-custom">Custom</span>
@@ -70,7 +66,7 @@ export default function URLCard({ url, onDelete, index = 0 }) {
 
         {/* Secondary: Destination URL */}
         <p className="url-original" title={url.original_url}>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px', verticalAlign: 'middle', opacity: 0.5 }}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', verticalAlign: 'middle', opacity: 0.5 }}>
             <polyline points="9 18 15 12 9 6" />
           </svg>
           {url.original_url}
@@ -85,7 +81,7 @@ export default function URLCard({ url, onDelete, index = 0 }) {
               <line x1="8" y1="2" x2="8" y2="6" />
               <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
-            {createdDate}
+            Created {createdDate}
           </span>
           {url.expires_at && (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>

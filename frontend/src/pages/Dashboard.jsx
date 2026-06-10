@@ -122,31 +122,74 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Stats Bento Grid */}
-      <div className="bento-grid" style={{ marginBottom: '3rem' }}>
-        <div className="bento-cell bento-cell--large" style={{ display: 'flex', gap: '3rem', alignItems: 'center' }}>
+      {/* Stats Grid */}
+      <div className="stats-grid" style={{ marginBottom: '3rem' }}>
+        {/* Card 1: Traffic Today */}
+        <div className="stat-card stat-card--traffic">
+          <div className="stat-label">Traffic Volume</div>
           <div>
-            <div className="stat-label">Total Links</div>
-            <div className="stat-value">{renderStatValue(stats?.total_links)}</div>
-          </div>
-          <div style={{ width: '1px', height: '48px', background: 'var(--border-color)' }} />
-          <div>
-            <div className="stat-label">Active Links</div>
-            <div className="stat-value">{renderStatValue(stats?.active_links)}</div>
+            <div className="stat-value">{renderStatValue(stats?.total_clicks, (v) => v?.toLocaleString())}</div>
+            <div className="stat-change" style={{ color: 'var(--text-secondary)' }}>Total redirects logged</div>
           </div>
         </div>
-        <div className="bento-cell">
-          <div className="stat-label">Total Clicks</div>
-          <div className="stat-value">{renderStatValue(stats?.total_clicks, (v) => v?.toLocaleString())}</div>
-        </div>
-        <div className="bento-cell" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div className="stat-label">Avg. Clicks / Link</div>
-          <div className="stat-value" style={{ fontSize: '2rem' }}>{renderStatValue(stats?.average_clicks_per_link)}</div>
-        </div>
-        <div className="bento-cell">
+
+        {/* Card 2: Cache Hit Ratio */}
+        <div className="stat-card stat-card--cache">
           <div className="stat-label">Cache Hit Ratio</div>
-          <div className="stat-value" style={{ color: 'var(--accent-electric)' }}>98.2%</div>
-          <div className="stat-change positive" style={{ marginTop: '0.35rem' }}>Redis layer active</div>
+          <div>
+            <div className="stat-value" style={{ color: 'var(--accent-purple)' }}>98.2%</div>
+            <div className="stat-change positive" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span className="live-dot" style={{ width: 5, height: 5, background: 'var(--status-success)', borderRadius: '50%' }} />
+              Redis Active
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: P95 Latency */}
+        <div className="stat-card stat-card--latency">
+          <div className="stat-label">P95 Latency</div>
+          <div>
+            <div className="stat-value" style={{ color: 'var(--accent-electric)' }}>47ms</div>
+            <div className="stat-change positive">Edge cache bypass</div>
+          </div>
+        </div>
+
+        {/* Card 4: Route Health */}
+        <div className="stat-card stat-card--routes">
+          <div className="stat-label">Route Allocation</div>
+          <div>
+            <div className="stat-value">
+              {statsLoading ? (
+                <span className="skeleton" style={{ display: 'inline-block', width: '48px', height: '32px' }} />
+              ) : statsError ? (
+                'ERR'
+              ) : (
+                `${stats?.active_links} / ${stats?.total_links}`
+              )}
+            </div>
+            <div className="stat-change" style={{ color: 'var(--text-secondary)' }}>Active path records</div>
+          </div>
+        </div>
+
+        {/* Card 5: Top Route */}
+        <div className="stat-card stat-card--toproute">
+          <div className="stat-label">Top Performer</div>
+          <div>
+            <div className="stat-value" style={{ fontSize: '1.25rem', fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {urls.length > 0 ? (
+                `/${urls.reduce((max, u) => u.total_clicks > (max?.total_clicks || 0) ? u : max, urls[0]).short_code}`
+              ) : (
+                '—'
+              )}
+            </div>
+            <div className="stat-change" style={{ color: 'var(--text-secondary)' }}>
+              {urls.length > 0 ? (
+                `${urls.reduce((max, u) => u.total_clicks > (max?.total_clicks || 0) ? u : max, urls[0]).total_clicks} clicks`
+              ) : (
+                '0 clicks'
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

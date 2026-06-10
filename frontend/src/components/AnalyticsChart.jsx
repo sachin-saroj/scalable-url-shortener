@@ -70,25 +70,25 @@ export default function AnalyticsChart({ data, title }) {
         <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
           <defs>
             <linearGradient id="gradientBlue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.12} />
-              <stop offset="100%" stopColor="#3B82F6" stopOpacity={0.01} />
+              <stop offset="0%" stopColor="#0066FF" stopOpacity={0.08} />
+              <stop offset="100%" stopColor="#0066FF" stopOpacity={0.00} />
             </linearGradient>
             <linearGradient id="gradientPurple" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.08} />
-              <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0.01} />
+              <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.05} />
+              <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0.00} />
             </linearGradient>
           </defs>
           <CartesianGrid
-            strokeDasharray="none"
+            strokeDasharray="3 3"
             stroke="var(--border-color)"
-            strokeOpacity={0.5}
+            strokeOpacity={0.35}
             vertical={false}
           />
           <XAxis
             dataKey="date"
             tick={{
               fill: 'var(--text-tertiary)',
-              fontSize: 9,
+              fontSize: 8,
               fontWeight: 500,
               fontFamily: 'var(--font-mono)',
             }}
@@ -99,31 +99,31 @@ export default function AnalyticsChart({ data, title }) {
           <YAxis
             tick={{
               fill: 'var(--text-tertiary)',
-              fontSize: 9,
+              fontSize: 8,
               fontWeight: 500,
               fontFamily: 'var(--font-mono)',
             }}
             tickLine={false}
             axisLine={false}
-            width={36}
+            width={30}
           />
           <Tooltip content={<CustomTooltip />} />
           <Area
             type="monotone"
             dataKey="total"
-            name="Total"
-            stroke="#3B82F6"
-            strokeWidth={2}
+            name="Total Volume"
+            stroke="#0066FF"
+            strokeWidth={1.5}
             fill="url(#gradientBlue)"
             dot={false}
-            activeDot={{ r: 4, fill: '#3B82F6', stroke: '#fff', strokeWidth: 2 }}
+            activeDot={{ r: 4, fill: '#0066FF', stroke: '#fff', strokeWidth: 2 }}
           />
           <Area
             type="monotone"
             dataKey="unique"
-            name="Unique"
+            name="Unique Visitors"
             stroke="#8B5CF6"
-            strokeWidth={1.5}
+            strokeWidth={1.2}
             fill="url(#gradientPurple)"
             dot={false}
             activeDot={{ r: 3, fill: '#8B5CF6', stroke: '#fff', strokeWidth: 2 }}
