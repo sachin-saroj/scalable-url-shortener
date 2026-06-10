@@ -1,7 +1,8 @@
 /**
- * Analytics Page
- * ───────────────
- * Detailed click analytics for a specific short URL.
+ * Analytics Page — LinkForge V3
+ * ──────────────────────────────
+ * Detailed click analytics with premium chart styling
+ * and infrastructure-grade data presentation.
  */
 
 import { useState, useEffect } from 'react';
@@ -38,13 +39,13 @@ export default function Analytics() {
   if (loading) {
     return (
       <div className="page-container">
-        <div className="skeleton" style={{ height: '40px', width: '300px', marginBottom: '2rem' }} />
+        <div className="skeleton" style={{ height: '36px', width: '280px', marginBottom: '2rem' }} />
         <div className="stats-grid">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="skeleton" style={{ height: '100px' }} />
           ))}
         </div>
-        <div className="skeleton" style={{ height: '350px', marginTop: '1.5rem' }} />
+        <div className="skeleton" style={{ height: '320px', marginTop: '1.5rem' }} />
       </div>
     );
   }
@@ -55,14 +56,14 @@ export default function Analytics() {
         <div className="empty-state">
           <div className="empty-state-icon">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="15" y1="9" x2="9" y2="15"></line>
-              <line x1="9" y1="9" x2="15" y2="15"></line>
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
             </svg>
           </div>
           <h3 className="empty-state-title">{error}</h3>
-          <Link to="/dashboard" className="btn btn-primary" style={{ marginTop: '1rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          <Link to="/dashboard" className="btn btn-primary" style={{ marginTop: '1.5rem' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             Back to Dashboard
           </Link>
         </div>
@@ -77,23 +78,40 @@ export default function Analytics() {
       {/* Header */}
       <div className="page-header">
         <Link to="/dashboard" style={{
-          fontSize: '0.85rem',
-          color: 'var(--text-secondary)',
+          fontSize: '0.7rem',
+          fontWeight: 600,
+          color: 'var(--text-tertiary)',
           display: 'inline-flex',
           alignItems: 'center',
           gap: '4px',
-          marginBottom: '0.75rem',
-          textDecoration: 'none'
+          marginBottom: '1rem',
+          textDecoration: 'none',
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
         }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-          Back to Dashboard
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Dashboard
         </Link>
-        <h1 className="page-title">Analytics: /{shortCode}</h1>
+        <h1 className="page-title" style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem' }}>
+          Analytics
+          <span style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '1.25rem',
+            fontWeight: 600,
+            color: 'var(--accent-electric)',
+            letterSpacing: '-0.01em',
+          }}>
+            /{shortCode}
+          </span>
+        </h1>
         <p className="page-subtitle" style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: '0.8rem',
           maxWidth: '600px',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
+          color: 'var(--text-tertiary)',
         }}>
           {data.original_url}
         </p>
@@ -122,18 +140,18 @@ export default function Analytics() {
       {/* Click Chart */}
       <AnalyticsChart
         data={data.clicks_by_day}
-        title="Clicks Over Time (Last 30 Days)"
+        title="Click Volume — Last 30 Days"
       />
 
       {/* Bottom Row */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
-        gap: '1.5rem',
+        gap: '1rem',
       }}>
         {/* Top Countries */}
         <div className="chart-container" id="top-countries">
-          <h3 className="chart-title">Top Countries</h3>
+          <h3 className="chart-title">Geographic Distribution</h3>
           {data.top_countries && data.top_countries.length > 0 ? (
             <ul className="country-list">
               {data.top_countries.map((c, i) => (
@@ -141,15 +159,15 @@ export default function Analytics() {
                   <span className="country-name" style={{ display: 'inline-flex', alignItems: 'center' }}>
                     <span style={{
                       fontFamily: 'var(--font-mono)',
-                      fontSize: '0.7rem',
+                      fontSize: '0.65rem',
                       background: 'var(--bg-primary)',
                       border: '1px solid var(--border-color)',
-                      borderRadius: '4px',
+                      borderRadius: 'var(--radius-xs)',
                       padding: '0.15rem 0.4rem',
                       marginRight: '8px',
-                      color: 'var(--text-secondary)',
+                      color: 'var(--text-tertiary)',
                       lineHeight: '1',
-                      fontWeight: 500
+                      fontWeight: 600,
                     }}>
                       {getCountryCode(c.country)}
                     </span>
@@ -160,16 +178,16 @@ export default function Analytics() {
               ))}
             </ul>
           ) : (
-            <p style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem' }}>
-              No geo data available yet
+            <p style={{ color: 'var(--text-tertiary)', fontSize: '0.85rem' }}>
+              No geographic data available yet
             </p>
           )}
         </div>
 
-        {/* Quick Info */}
+        {/* Link Details */}
         <div className="chart-container" id="quick-info">
-          <h3 className="chart-title">Link Details</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <h3 className="chart-title">Route Details</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
             <InfoRow
               label="Short URL"
               value={`${window.location.origin}/${shortCode}`}
@@ -187,9 +205,9 @@ export default function Analytics() {
               }
             />
             <InfoRow
-              label="Click-through Rate"
+              label="Unique Ratio"
               value={data.total_clicks > 0
-                ? `${Math.round((data.unique_clicks / data.total_clicks) * 100)}% unique`
+                ? `${Math.round((data.unique_clicks / data.total_clicks) * 100)}% unique visitors`
                 : 'N/A'
               }
             />
@@ -203,14 +221,13 @@ export default function Analytics() {
               rel="noopener noreferrer"
               className="btn btn-secondary"
               id="download-qr"
-              style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+              style={{ width: '100%' }}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <rect x="7" y="7" width="3" height="3"></rect>
-                <rect x="14" y="7" width="3" height="3"></rect>
-                <rect x="7" y="14" width="3" height="3"></rect>
-                <rect x="14" y="14" width="3" height="3"></rect>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <rect x="7" y="7" width="3" height="3" />
+                <rect x="14" y="7" width="3" height="3" />
+                <rect x="7" y="14" width="3" height="3" />
               </svg>
               Download QR Code
             </a>
@@ -227,14 +244,18 @@ function InfoRow({ label, value, mono }) {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: '0.5rem 0',
+      padding: '0.65rem 0',
       borderBottom: '1px solid var(--border-color)',
     }}>
-      <span style={{ color: 'var(--text-tertiary)', fontSize: '0.85rem' }}>{label}</span>
+      <span style={{
+        color: 'var(--text-tertiary)',
+        fontSize: '0.8rem',
+        fontWeight: 500,
+      }}>{label}</span>
       <span style={{
         color: 'var(--text-primary)',
-        fontSize: '0.85rem',
-        fontWeight: 500,
+        fontSize: '0.8rem',
+        fontWeight: 600,
         fontFamily: mono ? 'var(--font-mono)' : 'inherit',
         maxWidth: '220px',
         overflow: 'hidden',
@@ -260,5 +281,5 @@ function getCountryCode(countryName) {
     'Brazil': 'BR',
     'China': 'CN',
   };
-  return codes[countryName] || 'GL'; // Global/Other
+  return codes[countryName] || 'GL';
 }
