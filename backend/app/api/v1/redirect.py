@@ -81,11 +81,9 @@ async def redirect_to_url(
     user_agent = request.headers.get("User-Agent")
     referer = request.headers.get("Referer")
 
-    # Fire-and-forget click recording
+    # Fire-and-forget click tracking (use fresh DB session inside background task)
     background_tasks.add_task(
         _record_click_background,
-        db=db,
-        cache=cache,
         url_id=url_id,
         short_code=short_code,
         ip_address=client_ip,
@@ -97,8 +95,6 @@ async def redirect_to_url(
 
 
 async def _record_click_background(
-    db: AsyncSession,
-    cache: CacheService,
     url_id: int,
     short_code: str,
     ip_address: str | None,
@@ -111,20 +107,32 @@ async def _record_click_background(
     Runs after the redirect response is sent.
     Failure here does NOT affect the user experience.
     """
+    from app.db.session import async_session_factory
+    from app.dependencies import get_redis
+    from app.services.cache_service import CacheService
+
     try:
         # Resolve geo-location
         geo = get_location(ip_address) if ip_address else {"country": None, "city": None}
 
-        analytics_service = AnalyticsService(db, cache)
-        await analytics_service.record_click(
-            url_id=url_id,
-            short_code=short_code,
-            ip_address=ip_address,
-            user_agent=user_agent,
-            referer=referer,
-            country=geo["country"],
-            city=geo["city"],
-        )
+        redis_client = await get_redis()
+        cache = CacheService(redis_client)
+
+        async with async_session_factory() as db:
+            try:
+                analytics_service = AnalyticsService(db, cache)
+                await analytics_service.record_click(
+                    url_id=url_id,
+                    short_code=short_code,
+                    ip_address=ip_address,
+                    user_agent=user_agent,
+                    referer=referer,
+                    country=geo["country"],
+                    city=geo["city"],
+                )
+            except Exception:
+                await db.rollback()
+                raise
     except Exception as e:
         # Log but don't crash — analytics failure is non-critical
         import logging
