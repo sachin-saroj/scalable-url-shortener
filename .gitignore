@@ -60,3 +60,8 @@ alembic/versions/__pycache__/
 
 # GeoIP
 *.mmdb
+
+# Agents
+.agents/
+skills-lock.json
+
