@@ -20,11 +20,7 @@ Here is a glimpse of the **Premium Utilitarian Minimalism & Editorial UI** built
 <div align="center">
   <img src="screenshot/landing.png" alt="Landing View" width="800" style="border-radius:6px; border:1px solid #eaeaea; margin-bottom:15px;" />
   <br/>
-  <img src="screenshot/dashboard.png" alt="Dashboard View" width="800" style="border-radius:6px; border:1px solid #eaeaea; margin-bottom:15px;" />
-  <br/>
-  <img src="screenshot/issues.png" alt="Issues Board View" width="800" style="border-radius:6px; border:1px solid #eaeaea; margin-bottom:15px;" />
-  <br/>
-  <img src="screenshot/pull_requests.png" alt="Pull Requests View" width="800" style="border-radius:6px; border:1px solid #eaeaea;" />
+  <img src="screenshot/dashboard.png" alt="Dashboard View" width="800" style="border-radius:6px; border:1px solid #eaeaea;" />
 </div>
 
 <br/>
@@ -40,7 +36,6 @@ Here is a glimpse of the **Premium Utilitarian Minimalism & Editorial UI** built
 - 🛡️ **Rate Limiting**: Built-in API rate limiting to prevent abuse and ensure stability.
 - 🔒 **JWT Authentication**: Secure user registration, login, and protected routes.
 - 📱 **QR Code Generation**: Automatically generate downloadable QR codes for shortened URLs.
-- 💻 **Developer Workspace Modules**: Built-in interactive boards for tracking Issues, Pull Requests, and Code Reviews natively in the application.
 
 ## 🏗️ Architecture Stack
 

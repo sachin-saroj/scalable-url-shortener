@@ -28,12 +28,6 @@ export default function Navbar() {
             <Link to="/dashboard" className={isActive('/dashboard')}>
               <span>Dashboard</span>
             </Link>
-            <Link to="/issues" className={isActive('/issues')}>
-              <span>Issues</span>
-            </Link>
-            <Link to="/pulls" className={isActive('/pulls')}>
-              <span>Pull Requests</span>
-            </Link>
             <span style={{
               color: 'var(--text-tertiary)',
               fontSize: '0.75rem',

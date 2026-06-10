@@ -12,8 +12,6 @@ import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Issues from './pages/Issues';
-import PullRequests from './pages/PullRequests';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -59,22 +57,6 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/issues"
-        element={
-          <ProtectedRoute>
-            <Issues />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/pulls"
-        element={
-          <ProtectedRoute>
-            <PullRequests />
           </ProtectedRoute>
         }
       />
