@@ -2,18 +2,6 @@
 URL Service
 ────────────
 Core business logic for URL shortening and retrieval.
-
-ARCHITECTURE:
-- This is the SERVICE LAYER (business logic only)
-- It receives clean inputs from the API layer
-- It interacts with the database and cache
-- It does NOT handle HTTP concerns (status codes, headers)
-
-COMMON MISTAKES AVOIDED:
-1. Putting business logic in route handlers (untestable)
-2. Direct DB access from routes (no caching layer)
-3. Not checking URL validity before storing
-4. Generating short codes with collision risk
 """
 
 import logging
@@ -21,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import and_, case, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
@@ -30,7 +18,7 @@ from app.models.url import URL
 from app.schemas.url import URLCreateRequest, URLResponse
 from app.services.cache_service import CacheService
 from app.utils.base62 import encode_id
-from app.utils.validators import is_valid_url, sanitize_url
+from app.utils.validators import is_valid_url, is_valid_url_async, sanitize_url
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -79,7 +67,7 @@ class URLService:
         """
         # Step 1: Sanitize and validate
         clean_url = sanitize_url(request.url)
-        is_valid, error_msg = is_valid_url(clean_url)
+        is_valid, error_msg = await is_valid_url_async(clean_url)
         if not is_valid:
             raise ValueError(error_msg)
 
@@ -123,7 +111,13 @@ class URLService:
             cache_ttl = min(cache_ttl, int(remaining))
 
         effective_code = url_record.custom_alias or short_code
-        await self.cache.set_url(effective_code, clean_url, ttl=cache_ttl)
+        url_data = {
+            "id": url_record.id,
+            "original_url": clean_url,
+            "is_active": url_record.is_active,
+            "expires_at": url_record.expires_at.isoformat() if url_record.expires_at else None,
+        }
+        await self.cache.set_url_data(effective_code, url_data, ttl=cache_ttl)
 
         logger.info(f"Created short URL: {effective_code} → {clean_url[:80]}")
 
@@ -137,11 +131,10 @@ class URLService:
         This is the HOT PATH — must be as fast as possible.
 
         FLOW:
-        1. Check Redis cache (sub-ms)
-        2. If miss → query PostgreSQL
-        3. Check if expired → return 410
-        4. Cache the result for next time
-        5. Return original URL + URL id (for click tracking)
+        1. Check Redis cache (sub-ms) for metadata payload
+        2. Validate status, expiry, and URL safety directly from cached metadata (0 DB queries)
+        3. If cache miss (or legacy entry with ID = None) -> query database
+        4. Validate database record, then write JSON payload to Redis and return resolution
 
         Returns:
             Tuple of (original_url, url_id)
@@ -151,37 +144,49 @@ class URLService:
             ValueError: URL has expired (410)
         """
         # Step 1: Check cache
-        cached_url = await self.cache.get_url(code)
-        if cached_url:
-            # Still need the URL ID for click tracking
-            url_record = await self._find_by_code(code)
-            if url_record and (not url_record.is_active):
+        url_data = await self.cache.get_url_data(code)
+        if url_data and url_data.get("id") is not None:
+            # We have complete cached metadata! Validate directly without DB queries.
+            original_url = url_data["original_url"]
+            url_id = url_data["id"]
+            is_active = url_data["is_active"]
+            expires_at_str = url_data["expires_at"]
+
+            if not is_active:
                 await self.cache.delete_url(code)
                 raise LookupError("Short URL not found")
-            if url_record and url_record.is_expired:
-                await self.cache.delete_url(code)
-                raise ValueError("This short URL has expired")
-            # Check if cached destination URL is malformed
-            is_valid, _ = is_valid_url(cached_url)
+
+            # Check expiry
+            if expires_at_str:
+                expires_at = datetime.fromisoformat(expires_at_str)
+                if expires_at.tzinfo is None:
+                    expires_at = expires_at.replace(tzinfo=timezone.utc)
+                if datetime.now(timezone.utc) >= expires_at:
+                    await self.cache.delete_url(code)
+                    raise ValueError("This short URL has expired")
+
+            # Check if destination URL is malformed
+            is_valid, _ = is_valid_url(original_url, skip_dns=True)
             if not is_valid:
                 await self.cache.delete_url(code)
                 raise ValueError("Destination URL is malformed")
-            if url_record:
-                return cached_url, url_record.id
-            # Cache has stale data — URL was deleted from DB
-            await self.cache.delete_url(code)
 
-        # Step 2: Query database
+            return original_url, url_id
+
+        # Step 2: Cache miss or legacy entry (id is None). Query database.
         url_record = await self._find_by_code(code)
         if not url_record or not url_record.is_active:
+            if url_data:
+                await self.cache.delete_url(code)
             raise LookupError("Short URL not found")
 
         # Step 3: Check expiry
         if url_record.is_expired:
+            await self.cache.delete_url(code)
             raise ValueError("This short URL has expired")
 
         # Check if destination URL is malformed
-        is_valid, _ = is_valid_url(url_record.original_url)
+        is_valid, _ = is_valid_url(url_record.original_url, skip_dns=True)
         if not is_valid:
             raise ValueError("Destination URL is malformed")
 
@@ -190,7 +195,15 @@ class URLService:
         if url_record.expires_at:
             remaining = (url_record.expires_at - datetime.now(timezone.utc)).total_seconds()
             cache_ttl = min(cache_ttl, int(remaining))
-        await self.cache.set_url(code, url_record.original_url, ttl=cache_ttl)
+
+        # Store full JSON metadata structure in Redis
+        new_url_data = {
+            "id": url_record.id,
+            "original_url": url_record.original_url,
+            "is_active": url_record.is_active,
+            "expires_at": url_record.expires_at.isoformat() if url_record.expires_at else None,
+        }
+        await self.cache.set_url_data(code, new_url_data, ttl=cache_ttl)
 
         return url_record.original_url, url_record.id
 
@@ -291,6 +304,68 @@ class URLService:
         query = select(func.count(Click.id)).where(Click.url_id == url_id)
         result = await self.db.execute(query)
         return result.scalar() or 0
+
+    async def get_dashboard_stats(self, user_id: UUID) -> dict[str, Any]:
+        """
+        Calculate overall dashboard statistics for a user from complete active data.
+        Avoids N+1 queries by pre-aggregating click counts in a subquery join.
+        """
+        now = datetime.now(timezone.utc)
+
+        # Subquery to aggregate clicks per URL
+        click_subquery = (
+            select(Click.url_id, func.count(Click.id).label("clicks"))
+            .group_by(Click.url_id)
+            .subquery()
+        )
+
+        # Main query joining active URLs with click counts
+        query = (
+            select(
+                func.count(URL.id).label("total_links"),
+                func.sum(
+                    case(
+                        (or_(URL.expires_at.is_(None), URL.expires_at > now), 1),
+                        else_=0
+                    )
+                ).label("active_links"),
+                func.sum(
+                    case(
+                        (and_(URL.expires_at.isnot(None), URL.expires_at <= now), 1),
+                        else_=0
+                    )
+                ).label("expired_links"),
+                func.coalesce(func.sum(click_subquery.c.clicks), 0).label("total_clicks")
+            )
+            .select_from(URL)
+            .outerjoin(click_subquery, URL.id == click_subquery.c.url_id)
+            .where(
+                URL.user_id == user_id,
+                URL.is_active.is_(True)
+            )
+        )
+
+        result = await self.db.execute(query)
+        row = result.fetchone()
+
+        total_links = row.total_links if row and row.total_links is not None else 0
+        active_links = row.active_links if row and row.active_links is not None else 0
+        expired_links = row.expired_links if row and row.expired_links is not None else 0
+        total_clicks = row.total_clicks if row and row.total_clicks is not None else 0
+
+        average_clicks = (
+            round(total_clicks / total_links, 2)
+            if total_links > 0
+            else 0.0
+        )
+
+        return {
+            "total_links": total_links,
+            "active_links": active_links,
+            "expired_links": expired_links,
+            "total_clicks": total_clicks,
+            "average_clicks_per_link": average_clicks,
+        }
 
     def _build_response(self, url: URL) -> URLResponse:
         """Build API response from URL model."""

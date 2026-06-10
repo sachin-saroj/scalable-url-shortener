@@ -53,11 +53,59 @@ class CacheService:
             result = await self.redis.get(f"url:{short_code}")
             if result:
                 logger.debug(f"Cache HIT for {short_code}")
-                return result.decode() if isinstance(result, bytes) else result
+                from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+                CACHE_OPERATIONS_TOTAL.labels(operation="get", status="hit").inc()
+                decoded = result.decode() if isinstance(result, bytes) else result
+                if decoded.startswith("{") and "original_url" in decoded:
+                    try:
+                        data = json.loads(decoded)
+                        return cast(str | None, data.get("original_url"))
+                    except json.JSONDecodeError:
+                        pass
+                return decoded
             logger.debug(f"Cache MISS for {short_code}")
+            from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+            CACHE_OPERATIONS_TOTAL.labels(operation="get", status="miss").inc()
             return None
         except Exception as e:
             logger.warning(f"Redis GET error (degraded): {e}")
+            from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+            CACHE_OPERATIONS_TOTAL.labels(operation="get", status="error").inc()
+            return None
+
+    async def get_url_data(self, short_code: str) -> dict[str, Any] | None:
+        """
+        Get deserialized URL metadata dictionary from cache.
+        Returns None on cache miss or Redis error.
+        If a legacy plain string is retrieved, wraps it in a compatible dictionary structure.
+        """
+        try:
+            result = await self.redis.get(f"url:{short_code}")
+            if result:
+                logger.debug(f"Cache HIT for {short_code}")
+                from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+                CACHE_OPERATIONS_TOTAL.labels(operation="get", status="hit").inc()
+                decoded = result.decode() if isinstance(result, bytes) else result
+                if decoded.startswith("{") and "original_url" in decoded:
+                    try:
+                        return cast(dict[str, Any], json.loads(decoded))
+                    except json.JSONDecodeError:
+                        pass
+                # Legacy plain string fallback
+                return {
+                    "id": None,
+                    "original_url": decoded,
+                    "is_active": True,
+                    "expires_at": None,
+                }
+            logger.debug(f"Cache MISS for {short_code}")
+            from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+            CACHE_OPERATIONS_TOTAL.labels(operation="get", status="miss").inc()
+            return None
+        except Exception as e:
+            logger.warning(f"Redis GET error (degraded): {e}")
+            from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+            CACHE_OPERATIONS_TOTAL.labels(operation="get", status="error").inc()
             return None
 
     async def set_url(self, short_code: str, original_url: str, ttl: int = 86400) -> bool:
@@ -71,18 +119,45 @@ class CacheService:
         """
         try:
             await self.redis.setex(f"url:{short_code}", ttl, original_url)
+            from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+            CACHE_OPERATIONS_TOTAL.labels(operation="set", status="success").inc()
             return True
         except Exception as e:
             logger.warning(f"Redis SET error (degraded): {e}")
+            from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+            CACHE_OPERATIONS_TOTAL.labels(operation="set", status="error").inc()
+            return False
+
+    async def set_url_data(
+        self, short_code: str, url_data: dict[str, Any], ttl: int = 86400
+    ) -> bool:
+        """
+        Cache complete URL metadata.
+        Serializes dict to JSON string and stores under f"url:{short_code}".
+        """
+        try:
+            payload = json.dumps(url_data)
+            await self.redis.setex(f"url:{short_code}", ttl, payload)
+            from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+            CACHE_OPERATIONS_TOTAL.labels(operation="set", status="success").inc()
+            return True
+        except Exception as e:
+            logger.warning(f"Redis SET error (degraded): {e}")
+            from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+            CACHE_OPERATIONS_TOTAL.labels(operation="set", status="error").inc()
             return False
 
     async def delete_url(self, short_code: str) -> bool:
         """Remove a URL from cache (used when URL is deactivated)."""
         try:
             await self.redis.delete(f"url:{short_code}")
+            from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+            CACHE_OPERATIONS_TOTAL.labels(operation="delete", status="success").inc()
             return True
         except Exception as e:
             logger.warning(f"Redis DELETE error: {e}")
+            from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+            CACHE_OPERATIONS_TOTAL.labels(operation="delete", status="error").inc()
             return False
 
     # ── Unique Click Tracking ──────────────────────────
@@ -126,11 +201,17 @@ class CacheService:
         try:
             result = await cast(Any, self.redis.get(f"analytics:{short_code}"))
             if result:
+                from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+                CACHE_OPERATIONS_TOTAL.labels(operation="get_analytics", status="hit").inc()
                 data = result.decode() if isinstance(result, bytes) else result
                 return cast(dict[str, Any], json.loads(data))
+            from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+            CACHE_OPERATIONS_TOTAL.labels(operation="get_analytics", status="miss").inc()
             return None
         except Exception as e:
             logger.warning(f"Redis analytics GET error: {e}")
+            from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+            CACHE_OPERATIONS_TOTAL.labels(operation="get_analytics", status="error").inc()
             return None
 
     async def set_analytics(self, short_code: str, data: dict[str, Any], ttl: int = 60) -> bool:
@@ -144,9 +225,13 @@ class CacheService:
                     json.dumps(data, default=str),
                 ),
             )
+            from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+            CACHE_OPERATIONS_TOTAL.labels(operation="set_analytics", status="success").inc()
             return True
         except Exception as e:
             logger.warning(f"Redis analytics SET error: {e}")
+            from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+            CACHE_OPERATIONS_TOTAL.labels(operation="set_analytics", status="error").inc()
             return False
 
     # ── Generic Operations ─────────────────────────────

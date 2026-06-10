@@ -17,6 +17,7 @@ TASKS:
 
 from celery import Celery  # type: ignore[import-untyped]
 from celery.schedules import crontab  # type: ignore[import-untyped]
+from celery.signals import setup_logging  # type: ignore[import-untyped]
 
 from app.config import get_settings
 
@@ -57,3 +58,12 @@ celery_app.conf.beat_schedule = {
 
 # Auto-discover tasks
 celery_app.autodiscover_tasks(["app.workers"])
+
+
+@setup_logging.connect
+def config_loggers(*args, **kwargs):
+    from app.config import get_settings
+    from app.utils.logging import configure_logging
+
+    settings = get_settings()
+    configure_logging(env=settings.APP_ENV, debug=settings.APP_DEBUG)

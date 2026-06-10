@@ -14,6 +14,7 @@ DESIGN:
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.dependencies import DB, Cache, CurrentUser, OptionalUser, check_rate_limit
+from app.schemas.dashboard_stats import DashboardStatsResponse
 from app.schemas.url import URLCreateRequest, URLListItem, URLListResponse, URLResponse
 from app.services.security_service import check_url_safety
 from app.services.url_service import URLService
@@ -69,6 +70,26 @@ async def shorten_url(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=error_msg,
         )
+
+
+@router.get(
+    "/urls/stats",
+    response_model=DashboardStatsResponse,
+    summary="Get user dashboard statistics",
+    description=(
+        "Get overall statistics of links created by the user "
+        "(total, active, expired, clicks, average)."
+    ),
+)
+async def get_user_dashboard_stats(
+    db: DB,
+    cache: Cache,
+    user: CurrentUser,
+):
+    url_service = URLService(db, cache)
+    stats = await url_service.get_dashboard_stats(user.id)
+    return stats
+
 
 
 @router.get(

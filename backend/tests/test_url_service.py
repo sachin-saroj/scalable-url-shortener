@@ -112,6 +112,7 @@ class TestURLService:
         db_url = await service._find_by_code(response.short_code)
         db_url.expires_at = datetime.now(timezone.utc) - timedelta(seconds=10)
         await db_session.commit()
+        await cache_service.delete_url(response.short_code)
 
         # Resolve URL (should fail with ValueError due to expiration)
         with pytest.raises(ValueError, match="expired"):

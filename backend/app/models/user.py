@@ -14,7 +14,7 @@ DESIGN DECISIONS:
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, DateTime, String, text, func, true
+from sqlalchemy import Boolean, DateTime, String, func, text, true
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 

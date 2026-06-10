@@ -30,8 +30,8 @@ from sqlalchemy import (
     Index,
     String,
     Text,
-    text,
     func,
+    text,
     true,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
