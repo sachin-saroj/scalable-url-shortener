@@ -15,14 +15,16 @@
 
 ## 📸 Project Screenshots
 
-Here is a glimpse of the premium, dark-mode focused UI built from scratch using strict CSS variables, glassmorphism, and dynamic animations.
+Here is a glimpse of the **Premium Utilitarian Minimalism & Editorial UI** built from scratch using custom typography design tokens, desaturated spot pastels, 1px subtle borders, and interactive developer boards.
 
 <div align="center">
-    <img src="screenshot/Screenshot%202026-04-02%20181042.png" alt="Analytics View" width="800" style="border-radius:10px; margin-bottom:15px;" />
+  <img src="screenshot/landing.png" alt="Landing View" width="800" style="border-radius:6px; border:1px solid #eaeaea; margin-bottom:15px;" />
   <br/>
-    <img src="screenshot/Screenshot%202026-04-02%20180734.png" alt="Dashboard View" width="800" style="border-radius:10px; margin-bottom:15px;" />
+  <img src="screenshot/dashboard.png" alt="Dashboard View" width="800" style="border-radius:6px; border:1px solid #eaeaea; margin-bottom:15px;" />
   <br/>
-  <img src="screenshot/Screenshot%202026-04-02%20181101.png" alt="Create Link View" width="800" style="border-radius:10px;" />
+  <img src="screenshot/issues.png" alt="Issues Board View" width="800" style="border-radius:6px; border:1px solid #eaeaea; margin-bottom:15px;" />
+  <br/>
+  <img src="screenshot/pull_requests.png" alt="Pull Requests View" width="800" style="border-radius:6px; border:1px solid #eaeaea;" />
 </div>
 
 <br/>
@@ -38,6 +40,7 @@ Here is a glimpse of the premium, dark-mode focused UI built from scratch using 
 - 🛡️ **Rate Limiting**: Built-in API rate limiting to prevent abuse and ensure stability.
 - 🔒 **JWT Authentication**: Secure user registration, login, and protected routes.
 - 📱 **QR Code Generation**: Automatically generate downloadable QR codes for shortened URLs.
+- 💻 **Developer Workspace Modules**: Built-in interactive boards for tracking Issues, Pull Requests, and Code Reviews natively in the application.
 
 ## 🏗️ Architecture Stack
 

@@ -1,0 +1,99 @@
+services:
+  # ── PostgreSQL Database ──────────────────────────────
+  - type: db
+    name: linkforge-db
+    databaseName: url_shortener
+    user: shortener
+    plan: free
+
+  # ── Redis Cache & Broker ─────────────────────────────
+  - type: redis
+    name: linkforge-redis
+    plan: free
+    ipAllowList: [] # Allow internal access only
+
+  # ── FastAPI Backend Web Service ──────────────────────
+  - type: web
+    name: linkforge-backend
+    env: python
+    buildCommand: pip install -r backend/requirements.txt && alembic upgrade head
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: linkforge-db
+          property: connectionString
+      - key: REDIS_HOST
+        fromRedis:
+          name: linkforge-redis
+          property: host
+      - key: REDIS_PORT
+        fromRedis:
+          name: linkforge-redis
+          property: port
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: SECRET_KEY
+        generateValue: true
+      - key: BASE_URL
+        sync: false # Set to your Render custom domain URL
+
+  # ── Celery Worker ────────────────────────────────────
+  - type: worker
+    name: linkforge-celery-worker
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: celery -A app.workers.celery_app worker --loglevel=info --concurrency=2
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: linkforge-db
+          property: connectionString
+      - key: REDIS_HOST
+        fromRedis:
+          name: linkforge-redis
+          property: host
+      - key: REDIS_PORT
+        fromRedis:
+          name: linkforge-redis
+          property: port
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: SECRET_KEY
+        generateValue: true
+
+  # ── Celery Beat (Scheduler) ─────────────────────────
+  - type: worker
+    name: linkforge-celery-beat
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: celery -A app.workers.celery_app beat --loglevel=info
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: linkforge-db
+          property: connectionString
+      - key: REDIS_HOST
+        fromRedis:
+          name: linkforge-redis
+          property: host
+      - key: REDIS_PORT
+        fromRedis:
+          name: linkforge-redis
+          property: port
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: SECRET_KEY
+        generateValue: true
