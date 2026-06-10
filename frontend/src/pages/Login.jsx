@@ -1,6 +1,7 @@
 /**
- * Login Page
- * ───────────
+ * Login Page — LinkForge V3
+ * ──────────────────────────
+ * Premium auth with editorial serif title and refined inputs.
  */
 
 import { useState } from 'react';
@@ -42,7 +43,7 @@ export default function Login() {
     <div className="auth-page">
       <div className="auth-card" id="login-card">
         <h2 className="auth-title">Welcome Back</h2>
-        <p className="auth-subtitle">Sign in to manage your links</p>
+        <p className="auth-subtitle">Sign in to access your routes</p>
 
         <form className="auth-form" onSubmit={handleSubmit} id="login-form">
           <div className="form-group">
@@ -50,7 +51,7 @@ export default function Login() {
             <input
               type="email"
               className="form-input"
-              placeholder="you@example.com"
+              placeholder="you@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               id="login-email"
@@ -63,7 +64,7 @@ export default function Login() {
             <input
               type="password"
               className="form-input"
-              placeholder="••••••••"
+              placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               id="login-password"
@@ -84,7 +85,7 @@ export default function Login() {
         </form>
 
         <p className="auth-switch">
-          Don't have an account? <Link to="/register">Create one</Link>
+          No account yet? <Link to="/register">Create one</Link>
         </p>
       </div>
     </div>
