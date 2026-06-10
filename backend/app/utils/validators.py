@@ -9,6 +9,7 @@ SECURITY NOTE:
 - Prevent SSRF by blocking private/internal IPs
 """
 
+import asyncio
 import ipaddress
 import logging
 import re
@@ -40,7 +41,7 @@ PRIVATE_IP_PATTERNS = [
 ]
 
 
-def is_valid_url(url: str) -> tuple[bool, str]:
+def is_valid_url(url: str, skip_dns: bool = False) -> tuple[bool, str]:
     """
     Validate URL format and safety (including SSRF protection).
 
@@ -93,6 +94,9 @@ def is_valid_url(url: str) -> tuple[bool, str]:
         # Hostname is not an IP address, which is normal for domains
         pass
 
+    if skip_dns:
+        return True, ""
+
     # 3. DNS resolution safety check to prevent DNS rebinding SSRF
     try:
         addr_info = socket.getaddrinfo(hostname_lower, None)
@@ -120,12 +124,68 @@ def is_valid_url(url: str) -> tuple[bool, str]:
     return True, ""
 
 
+async def is_valid_url_async(url: str) -> tuple[bool, str]:
+    """
+    Validate URL format and safety asynchronously (SSRF protection).
+    Runs the blocking socket.getaddrinfo in an executor.
+    """
+    # 1. Basic validation without DNS lookup
+    is_valid, error_msg = is_valid_url(url, skip_dns=True)
+    if not is_valid:
+        return False, error_msg
+
+    # 2. Extract hostname
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        return False, "Invalid URL format"
+
+    hostname = parsed.hostname
+    if not hostname:
+        return False, "URL must have a valid hostname"
+
+    hostname_lower = hostname.lower().strip()
+
+    # 3. Check if hostname is raw IP (already checked by skip_dns=True)
+    try:
+        ipaddress.ip_address(hostname_lower)
+        return True, ""
+    except ValueError:
+        pass
+
+    # 4. Async DNS lookup using run_in_executor
+    try:
+        loop = asyncio.get_running_loop()
+        addr_info = await loop.run_in_executor(
+            None, lambda: socket.getaddrinfo(hostname_lower, None)
+        )
+        for info in addr_info:
+            ip_str = info[4][0]
+            try:
+                ip = ipaddress.ip_address(ip_str)
+                if (
+                    ip.is_private
+                    or ip.is_loopback
+                    or ip.is_link_local
+                    or ip.is_unspecified
+                    or ip.is_reserved
+                ):
+                    return False, "URLs pointing to private/internal addresses are not allowed"
+            except ValueError:
+                pass
+    except socket.gaierror:
+        if hostname_lower.endswith((".local", ".localhost", ".internal")):
+            return False, "URLs pointing to local domains are not allowed"
+
+    return True, ""
+
+
 def validate_url_safety(url: str) -> None:
     """
     Reusable validator for URL safety.
     Raises ValueError if URL is invalid or unsafe (SSRF attempt).
     """
-    is_valid, error_msg = is_valid_url(url)
+    is_valid, error_msg = is_valid_url(url, skip_dns=True)
     if not is_valid:
         raise ValueError(error_msg)
 
