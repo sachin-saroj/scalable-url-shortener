@@ -31,10 +31,12 @@ COMMON INTERVIEW MISTAKE:
 CHARSET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 BASE = len(CHARSET)  # 62
 
-# Prime multiplier to shuffle sequential IDs (prevents enumeration)
-# Any large prime works; must be coprime with BASE^max_length
-PRIME_MULTIPLIER = 2147483647  # Mersenne prime (2^31 - 1)
-OFFSET = 100000  # Starting offset to ensure minimum code length
+CODE_LENGTH = 6
+MODULUS = BASE ** CODE_LENGTH        # 62^6 = 56,800,235,584
+PRIME_MULTIPLIER = 2147483647  # Must be coprime with MODULUS (62 = 2 * 31)
+PRIME_MULTIPLIER_INV = pow(PRIME_MULTIPLIER, -1, MODULUS)  # modular inverse, Python 3.8+
+
+OFFSET = 100000  # keeps small IDs from mapping to 0
 
 
 def encode(num: int) -> str:
@@ -88,24 +90,35 @@ def decode(code: str) -> int:
     return num
 
 
+# Fixed permutation of indices 0 to 5 to scatter sequential patterns in the output string
+PERMUTATION = [3, 0, 5, 1, 4, 2]
+
+
 def encode_id(db_id: int) -> str:
     """
-    Encode a database ID with shuffling to prevent enumeration.
-
-    This adds an offset and applies a transformation so that
-    sequential IDs don't produce sequential short codes.
-
-    Args:
-        db_id: Auto-increment database ID
-
-    Returns:
-        Shuffled Base62 string
+    Shuffle DB id using modular multiplication before encoding.
+    shuffled = (db_id + OFFSET) * PRIME_MULTIPLIER  mod MODULUS
+    Result is zero-padded to CODE_LENGTH, and characters are permuted
+    so that sequential inputs do not produce sorted/sequential codes.
+    Limit: Up to 56.8 billion unique IDs (62^6) can be shuffled without collisions.
     """
-    # Add offset to ensure minimum length
-    shuffled = db_id + OFFSET
-    return encode(shuffled)
+    if db_id < 0:
+        raise ValueError("Cannot encode negative IDs")
+    val = (db_id + OFFSET) % MODULUS
+    shuffled = (val * PRIME_MULTIPLIER) % MODULUS
+    code = encode(shuffled)
+    padded = code.rjust(CODE_LENGTH, CHARSET[0])  # left-pad with '0'
+    return "".join(padded[i] for i in PERMUTATION)
 
 
 def decode_id(code: str) -> int:
-    """Decode a shuffled Base62 code back to database ID."""
-    return decode(code) - OFFSET
+    """Inverse of encode_id."""
+    if len(code) != CODE_LENGTH:
+        raise ValueError(f"Code must be exactly {CODE_LENGTH} characters long")
+    # Reconstruct the padded string using the inverse permutation mapping:
+    # padded[3] = code[0], padded[0] = code[1], padded[5] = code[2]
+    # padded[1] = code[3], padded[4] = code[4], padded[2] = code[5]
+    padded = [code[1], code[3], code[5], code[0], code[4], code[2]]
+    shuffled = decode("".join(padded))
+    val = (shuffled * PRIME_MULTIPLIER_INV) % MODULUS
+    return val - OFFSET

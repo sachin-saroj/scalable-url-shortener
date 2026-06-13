@@ -62,6 +62,9 @@ cp .env.example .env
 ```
 *(You may adjust the predefined secrets and configuration inside `.env` as needed).*
 
+> [!IMPORTANT]
+> You must set `GRAFANA_ADMIN_PASSWORD` in `.env` to a strong custom value before starting the services for the first time. Docker Compose will fail to start the Grafana service if this environment variable is missing or empty.
+
 ### 2. Start the Application
 
 **🌟 For Windows Users (1-Click Setup):**

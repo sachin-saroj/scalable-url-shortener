@@ -11,3 +11,7 @@ Replaced all hardcoded secrets and default values with environment variables to 
 
 ## Reference
 Closes #1
+
+## Addendum (Phase 1 follow-up)
+- Fixed: `GF_SECURITY_ADMIN_PASSWORD` was hardcoded in `docker-compose.yml`,
+  now sourced from `.env` (`GRAFANA_ADMIN_PASSWORD`), fails fast if unset.
