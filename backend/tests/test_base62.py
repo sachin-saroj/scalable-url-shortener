@@ -71,7 +71,7 @@ class TestBase62Roundtrip:
 
 
 class TestBase62WithOffset:
-    """Test the ID-specific encoding with offset."""
+    """Test the ID-specific encoding with offset and modular shuffling."""
 
     def test_encode_id_1(self):
         code = encode_id(1)
@@ -85,3 +85,16 @@ class TestBase62WithOffset:
         """Offset ensures codes are always at least a few chars long."""
         code = encode_id(1)
         assert len(code) >= 3
+
+    def test_encode_id_not_sequential(self):
+        codes = [encode_id(i) for i in range(1, 6)]
+        # consecutive IDs should NOT produce lexicographically adjacent codes
+        assert codes != sorted(codes)
+
+    def test_round_trip_full_range_sample(self):
+        for db_id in [0, 1, 100, 99999, 10_000_000, 56_000_000_000]:
+            assert decode_id(encode_id(db_id)) == db_id
+
+    def test_code_length_fixed(self):
+        for db_id in [1, 100000, 99999999]:
+            assert len(encode_id(db_id)) == 6

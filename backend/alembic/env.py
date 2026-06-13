@@ -6,12 +6,15 @@ Configures Alembic to use our SQLAlchemy models and settings.
 
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool, BigInteger
+from sqlalchemy import BigInteger, engine_from_config, pool
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.compiler import compiles
 
 from alembic import context
 from app.config import get_settings
+from app.db.base import Base
+from app.models import URL, Click, DailyAnalytics, User  # noqa: F401
+
 
 # Compiler overrides for SQLite compatibility during local migrations
 @compiles(JSONB, "sqlite")
@@ -23,10 +26,6 @@ def compile_jsonb_sqlite(type_, compiler, **kw):
 def compile_bigint_sqlite(type_, compiler, **kw):
     return "INTEGER"
 
-
-# Import all models so Alembic can detect them
-from app.db.base import Base
-from app.models import URL, Click, DailyAnalytics, User  # noqa: F401
 
 settings = get_settings()
 
