@@ -47,7 +47,7 @@ celery_app.conf.beat_schedule = {
     # Aggregate daily analytics every hour
     "aggregate-daily-analytics": {
         "task": "app.workers.tasks.aggregate_daily_analytics",
-        "schedule": crontab(minute=0),  # Every hour
+        "schedule": crontab(minute="0"),  # Every hour
     },
     # Clean up expired URLs every 15 minutes
     "cleanup-expired-urls": {

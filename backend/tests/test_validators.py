@@ -10,11 +10,11 @@ class TestURLValidation:
     """Test URL format and safety validation."""
 
     def test_valid_http_url(self):
-        is_valid, error = is_valid_url("http://example.com")
+        is_valid, _error = is_valid_url("http://example.com")
         assert is_valid is True
 
     def test_valid_https_url(self):
-        is_valid, error = is_valid_url("https://example.com/path?q=1")
+        is_valid, _error = is_valid_url("https://example.com/path?q=1")
         assert is_valid is True
 
     def test_invalid_no_scheme(self):
@@ -23,11 +23,11 @@ class TestURLValidation:
         assert "http" in error.lower()
 
     def test_invalid_javascript_scheme(self):
-        is_valid, error = is_valid_url("javascript:alert(1)")
+        is_valid, _error = is_valid_url("javascript:alert(1)")
         assert is_valid is False
 
     def test_invalid_file_scheme(self):
-        is_valid, error = is_valid_url("file:///etc/passwd")
+        is_valid, _error = is_valid_url("file:///etc/passwd")
         assert is_valid is False
 
     def test_blocked_localhost(self):
@@ -36,11 +36,11 @@ class TestURLValidation:
         assert "private" in error.lower()
 
     def test_blocked_private_ip(self):
-        is_valid, error = is_valid_url("http://192.168.1.1/admin")
+        is_valid, _error = is_valid_url("http://192.168.1.1/admin")
         assert is_valid is False
 
     def test_blocked_loopback(self):
-        is_valid, error = is_valid_url("http://127.0.0.1:8080")
+        is_valid, _error = is_valid_url("http://127.0.0.1:8080")
         assert is_valid is False
 
     def test_too_long_url(self):

@@ -112,7 +112,7 @@ def cleanup_expired_urls(self):
                 code = row[1] or row[0]  # custom_alias or short_code
                 if code:
                     r.delete(f"url:{code}")
-            r.close()
+            getattr(r, "close")()
 
         logger.info(f"Cleaned up {len(deactivated)} expired URLs")
         session.close()

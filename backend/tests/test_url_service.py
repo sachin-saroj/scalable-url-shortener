@@ -96,7 +96,7 @@ class TestURLService:
         await cache_service.delete_url(response.short_code)
 
         # Resolve URL (should fetch from DB and re-cache)
-        url, url_id = await service.get_original_url(response.short_code)
+        url, _url_id = await service.get_original_url(response.short_code)
         assert url == "https://elixir-lang.org"
 
         # Verify it was re-cached
