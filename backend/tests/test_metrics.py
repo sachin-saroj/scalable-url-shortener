@@ -16,8 +16,7 @@ async def test_metrics_endpoint(client):
     # Check that HTTP metrics exist in payload
     content = response.text
     assert (
-        "linkforge_http_requests_total" in content
-        or "promhttp_metric_handler_requests" in content
+        "linkforge_http_requests_total" in content or "promhttp_metric_handler_requests" in content
     )
 
 

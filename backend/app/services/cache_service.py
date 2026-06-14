@@ -54,6 +54,7 @@ class CacheService:
             if result:
                 logger.debug(f"Cache HIT for {short_code}")
                 from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+
                 CACHE_OPERATIONS_TOTAL.labels(operation="get", status="hit").inc()
                 decoded = result.decode() if isinstance(result, bytes) else result
                 if decoded.startswith("{") and "original_url" in decoded:
@@ -65,11 +66,13 @@ class CacheService:
                 return decoded
             logger.debug(f"Cache MISS for {short_code}")
             from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+
             CACHE_OPERATIONS_TOTAL.labels(operation="get", status="miss").inc()
             return None
         except Exception as e:
             logger.warning(f"Redis GET error (degraded): {e}")
             from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+
             CACHE_OPERATIONS_TOTAL.labels(operation="get", status="error").inc()
             return None
 
@@ -84,6 +87,7 @@ class CacheService:
             if result:
                 logger.debug(f"Cache HIT for {short_code}")
                 from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+
                 CACHE_OPERATIONS_TOTAL.labels(operation="get", status="hit").inc()
                 decoded = result.decode() if isinstance(result, bytes) else result
                 if decoded.startswith("{") and "original_url" in decoded:
@@ -100,11 +104,13 @@ class CacheService:
                 }
             logger.debug(f"Cache MISS for {short_code}")
             from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+
             CACHE_OPERATIONS_TOTAL.labels(operation="get", status="miss").inc()
             return None
         except Exception as e:
             logger.warning(f"Redis GET error (degraded): {e}")
             from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+
             CACHE_OPERATIONS_TOTAL.labels(operation="get", status="error").inc()
             return None
 
@@ -120,11 +126,13 @@ class CacheService:
         try:
             await self.redis.setex(f"url:{short_code}", ttl, original_url)
             from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+
             CACHE_OPERATIONS_TOTAL.labels(operation="set", status="success").inc()
             return True
         except Exception as e:
             logger.warning(f"Redis SET error (degraded): {e}")
             from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+
             CACHE_OPERATIONS_TOTAL.labels(operation="set", status="error").inc()
             return False
 
@@ -139,11 +147,13 @@ class CacheService:
             payload = json.dumps(url_data)
             await self.redis.setex(f"url:{short_code}", ttl, payload)
             from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+
             CACHE_OPERATIONS_TOTAL.labels(operation="set", status="success").inc()
             return True
         except Exception as e:
             logger.warning(f"Redis SET error (degraded): {e}")
             from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+
             CACHE_OPERATIONS_TOTAL.labels(operation="set", status="error").inc()
             return False
 
@@ -152,11 +162,13 @@ class CacheService:
         try:
             await self.redis.delete(f"url:{short_code}")
             from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+
             CACHE_OPERATIONS_TOTAL.labels(operation="delete", status="success").inc()
             return True
         except Exception as e:
             logger.warning(f"Redis DELETE error: {e}")
             from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+
             CACHE_OPERATIONS_TOTAL.labels(operation="delete", status="error").inc()
             return False
 
@@ -202,15 +214,18 @@ class CacheService:
             result = await cast(Any, self.redis.get(f"analytics:{short_code}"))
             if result:
                 from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+
                 CACHE_OPERATIONS_TOTAL.labels(operation="get_analytics", status="hit").inc()
                 data = result.decode() if isinstance(result, bytes) else result
                 return cast(dict[str, Any], json.loads(data))
             from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+
             CACHE_OPERATIONS_TOTAL.labels(operation="get_analytics", status="miss").inc()
             return None
         except Exception as e:
             logger.warning(f"Redis analytics GET error: {e}")
             from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+
             CACHE_OPERATIONS_TOTAL.labels(operation="get_analytics", status="error").inc()
             return None
 
@@ -226,11 +241,13 @@ class CacheService:
                 ),
             )
             from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+
             CACHE_OPERATIONS_TOTAL.labels(operation="set_analytics", status="success").inc()
             return True
         except Exception as e:
             logger.warning(f"Redis analytics SET error: {e}")
             from app.utils.metrics import CACHE_OPERATIONS_TOTAL
+
             CACHE_OPERATIONS_TOTAL.labels(operation="set_analytics", status="error").inc()
             return False
 

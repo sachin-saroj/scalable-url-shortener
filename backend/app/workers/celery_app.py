@@ -15,15 +15,15 @@ TASKS:
 3. Clean up expired URLs (periodic)
 """
 
-from celery import Celery  # type: ignore[import-untyped]
-from celery.schedules import crontab  # type: ignore[import-untyped]
-from celery.signals import setup_logging  # type: ignore[import-untyped]
+from celery import Celery
+from celery.schedules import crontab
+from celery.signals import setup_logging
 
 from app.config import get_settings
 
 settings = get_settings()
 
-celery_app = Celery(
+celery_app = Celery(  # type: ignore[no-untyped-call]
     "url_shortener",
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND,
@@ -57,7 +57,7 @@ celery_app.conf.beat_schedule = {
 }
 
 # Auto-discover tasks
-celery_app.autodiscover_tasks(["app.workers"])
+celery_app.autodiscover_tasks(["app.workers"])  # type: ignore[no-untyped-call]
 
 
 @setup_logging.connect

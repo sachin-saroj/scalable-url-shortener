@@ -91,7 +91,6 @@ async def get_user_dashboard_stats(
     return stats
 
 
-
 @router.get(
     "/urls",
     response_model=URLListResponse,

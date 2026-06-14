@@ -324,25 +324,16 @@ class URLService:
             select(
                 func.count(URL.id).label("total_links"),
                 func.sum(
-                    case(
-                        (or_(URL.expires_at.is_(None), URL.expires_at > now), 1),
-                        else_=0
-                    )
+                    case((or_(URL.expires_at.is_(None), URL.expires_at > now), 1), else_=0)
                 ).label("active_links"),
                 func.sum(
-                    case(
-                        (and_(URL.expires_at.isnot(None), URL.expires_at <= now), 1),
-                        else_=0
-                    )
+                    case((and_(URL.expires_at.isnot(None), URL.expires_at <= now), 1), else_=0)
                 ).label("expired_links"),
-                func.coalesce(func.sum(click_subquery.c.clicks), 0).label("total_clicks")
+                func.coalesce(func.sum(click_subquery.c.clicks), 0).label("total_clicks"),
             )
             .select_from(URL)
             .outerjoin(click_subquery, URL.id == click_subquery.c.url_id)
-            .where(
-                URL.user_id == user_id,
-                URL.is_active.is_(True)
-            )
+            .where(URL.user_id == user_id, URL.is_active.is_(True))
         )
 
         result = await self.db.execute(query)
@@ -353,11 +344,7 @@ class URLService:
         expired_links = row.expired_links if row and row.expired_links is not None else 0
         total_clicks = row.total_clicks if row and row.total_clicks is not None else 0
 
-        average_clicks = (
-            round(total_clicks / total_links, 2)
-            if total_links > 0
-            else 0.0
-        )
+        average_clicks = round(total_clicks / total_links, 2) if total_links > 0 else 0.0
 
         return {
             "total_links": total_links,

@@ -26,7 +26,7 @@ sync_engine = create_engine(settings.SYNC_DATABASE_URL, pool_size=5)
 SyncSession = sessionmaker(bind=sync_engine)
 
 
-@celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
+@celery_app.task(bind=True, max_retries=3, default_retry_delay=60)  # type: ignore[no-untyped-call]
 def aggregate_daily_analytics(self):
     """
     Aggregate click data into daily_analytics table.
@@ -70,7 +70,7 @@ def aggregate_daily_analytics(self):
         raise self.retry(exc=e) from e
 
 
-@celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
+@celery_app.task(bind=True, max_retries=3, default_retry_delay=60)  # type: ignore[no-untyped-call]
 def cleanup_expired_urls(self):
     """
     Deactivate expired URLs and remove them from cache.
