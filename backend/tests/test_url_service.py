@@ -155,3 +155,33 @@ class TestURLService:
         url_list, total = await service.get_user_urls(user.id, page=1, per_page=2)
         assert total == 3
         assert len(url_list) == 2
+
+    async def test_get_user_urls_query_count(self, db_session, cache_service):
+        service = URLService(db_session, cache_service)
+        user = await self._setup_user(db_session)
+
+        # Create 5 URLs to ensure we have multiple records
+        for i in range(5):
+            await service.create_short_url(
+                URLCreateRequest(url=f"https://link-{i}.org"), user_id=user.id
+            )
+
+        # Track query count using SQLAlchemy connection event listener
+        query_count = 0
+        from sqlalchemy import event
+
+        sync_engine = db_session.bind.sync_engine
+
+        @event.listens_for(sync_engine, "before_cursor_execute")
+        def count_query(conn, cursor, statement, parameters, context, executemany):
+            nonlocal query_count
+            query_count += 1
+
+        try:
+            url_list, total = await service.get_user_urls(user.id, page=1, per_page=5)
+            assert total == 5
+            assert len(url_list) == 5
+            # We expect exactly 2 queries: 1 count query + 1 paginated fetch query
+            assert query_count <= 2
+        finally:
+            event.remove(sync_engine, "before_cursor_execute", count_query)

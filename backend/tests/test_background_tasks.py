@@ -53,3 +53,33 @@ async def test_redirect_endpoint_triggers_background_task(client, db_session):
         clicks = res.scalars().all()
         assert len(clicks) == 1
         assert clicks[0].ip_address in ("127.0.0.1", "localhost", "test", "unknown")
+
+
+def test_cleanup_expired_urls_uses_redis_from_url():
+    from unittest.mock import MagicMock, patch
+
+    from app.config import get_settings
+    from app.workers.tasks import cleanup_expired_urls
+
+    settings = get_settings()
+
+    with (
+        patch("app.workers.tasks.SyncSession") as mock_session_class,
+        patch("redis.Redis.from_url") as mock_from_url,
+    ):
+        mock_session = MagicMock()
+        mock_session_class.return_value = mock_session
+
+        # mock execute return value containing custom_alias/short_code
+        mock_result = MagicMock()
+        mock_result.fetchall.return_value = [("shortcode1", "customalias1")]
+        mock_session.execute.return_value = mock_result
+
+        cleanup_expired_urls()
+
+        # Assert from_url was called with settings.REDIS_URL
+        mock_from_url.assert_called_once_with(settings.REDIS_URL)
+        # Assert delete was called for the custom_alias/short_code
+        mock_redis_instance = mock_from_url.return_value
+        mock_redis_instance.delete.assert_called_once_with("url:customalias1")
+        mock_redis_instance.close.assert_called_once()

@@ -11,6 +11,7 @@ from uuid import UUID
 
 from sqlalchemy import and_, case, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import noload
 
 from app.config import get_settings
 from app.models.click import Click
@@ -229,20 +230,28 @@ class URLService:
 
         # Fetch page
         offset = (page - 1) * per_page
+
+        # Subquery to aggregate clicks per URL
+        click_subquery = (
+            select(Click.url_id, func.count(Click.id).label("clicks"))
+            .group_by(Click.url_id)
+            .subquery()
+        )
+
+        # Main query joining active URLs with click counts
         query = (
-            select(URL)
+            select(URL, func.coalesce(click_subquery.c.clicks, 0).label("total_clicks"))
+            .options(noload(URL.user))
+            .outerjoin(click_subquery, URL.id == click_subquery.c.url_id)
             .where(URL.user_id == user_id, URL.is_active.is_(True))
             .order_by(URL.created_at.desc())
             .offset(offset)
             .limit(per_page)
         )
         result = await self.db.execute(query)
-        urls = result.scalars().all()
 
-        # Enrich with click counts
         url_list = []
-        for url in urls:
-            click_count = await self._get_click_count(url.id)
+        for url, click_count in result.all():
             url_list.append(
                 {
                     "short_code": url.effective_code,
@@ -298,12 +307,6 @@ class URLService:
         query = select(func.count(URL.id)).where(URL.custom_alias == alias)
         result = await self.db.execute(query)
         return (result.scalar() or 0) > 0
-
-    async def _get_click_count(self, url_id: int) -> int:
-        """Get total click count for a URL."""
-        query = select(func.count(Click.id)).where(Click.url_id == url_id)
-        result = await self.db.execute(query)
-        return result.scalar() or 0
 
     async def get_dashboard_stats(self, user_id: UUID) -> dict[str, Any]:
         """

@@ -63,3 +63,32 @@ async def test_cookie_register_and_login_flow(client):
     client.cookies.clear()
     response = await client.get("/api/v1/auth/me")
     assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_cookie_expiry_alignment(client):
+    from app.config import get_settings
+
+    settings = get_settings()
+
+    reg_payload = {
+        "email": "expirytest@example.com",
+        "username": "expirytest",
+        "password": "SecurePassword123",
+    }
+    response = await client.post("/api/v1/auth/register", json=reg_payload)
+    assert response.status_code == 201
+
+    set_cookies = response.headers.get_list("set-cookie")
+    access_cookie = next((c for c in set_cookies if "access_token" in c), None)
+    refresh_cookie = next((c for c in set_cookies if "refresh_token" in c), None)
+
+    assert access_cookie is not None
+    assert refresh_cookie is not None
+
+    # Verify Max-Age values match configurations
+    expected_access_max_age = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    expected_refresh_max_age = settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+
+    assert f"max-age={expected_access_max_age}" in access_cookie.lower()
+    assert f"max-age={expected_refresh_max_age}" in refresh_cookie.lower()
