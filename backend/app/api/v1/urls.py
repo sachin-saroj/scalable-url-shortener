@@ -11,7 +11,7 @@ DESIGN:
 - Dependencies injected via FastAPI's Depends()
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 
 from app.dependencies import DB, Cache, CurrentUser, OptionalUser, check_rate_limit
 from app.schemas.dashboard_stats import DashboardStatsResponse
@@ -35,6 +35,7 @@ async def shorten_url(
     db: DB,
     cache: Cache,
     user: OptionalUser,
+    background_tasks: BackgroundTasks,
 ):
     """
     Create a short URL.
@@ -56,6 +57,7 @@ async def shorten_url(
         result = await url_service.create_short_url(
             request,
             user_id=user.id if user else None,
+            background_tasks=background_tasks,
         )
         return result
     except ValueError as e:

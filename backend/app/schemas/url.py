@@ -12,6 +12,7 @@ WHY Pydantic schemas separate from ORM models?
 
 import re
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -76,6 +77,7 @@ class URLResponse(BaseModel):
     created_at: datetime
     expires_at: datetime | None = None
     custom_alias: str | None = None
+    metadata: dict[str, Any] | None = None
 
     model_config = {"from_attributes": True}
 
@@ -91,6 +93,7 @@ class URLListItem(BaseModel):
     expires_at: datetime | None = None
     is_active: bool = True
     custom_alias: str | None = None
+    metadata: dict[str, Any] | None = None
 
     model_config = {"from_attributes": True}
 

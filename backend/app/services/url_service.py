@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID
 
+from fastapi import BackgroundTasks
 from sqlalchemy import and_, case, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import noload
@@ -47,6 +48,7 @@ class URLService:
         self,
         request: URLCreateRequest,
         user_id: UUID | None = None,
+        background_tasks: BackgroundTasks | None = None,
     ) -> URLResponse:
         """
         Create a shortened URL.
@@ -103,6 +105,9 @@ class URLService:
         url_record.short_code = short_code
         await self.db.commit()
         await self.db.refresh(url_record)
+
+        if background_tasks:
+            background_tasks.add_task(_fetch_and_store_metadata, url_record.id, clean_url)
 
         # Step 7: Cache in Redis
         cache_ttl = settings.URL_CACHE_TTL
@@ -262,6 +267,7 @@ class URLService:
                     "expires_at": url.expires_at,
                     "is_active": url.is_active,
                     "custom_alias": url.custom_alias,
+                    "metadata": url.metadata_,
                 }
             )
 
@@ -367,4 +373,35 @@ class URLService:
             created_at=url.created_at,
             expires_at=url.expires_at,
             custom_alias=url.custom_alias,
+            metadata=url.metadata_,
         )
+
+
+async def _fetch_and_store_metadata(url_id: int, url: str) -> None:
+    """
+    Background task to fetch, parse, and store metadata (title, og:image, description)
+    for a created URL record. Re-runs SSRF checks prior to outbound call.
+    """
+    from sqlalchemy import update
+
+    from app.db.session import async_session_factory
+    from app.services.metadata_service import fetch_url_metadata
+    from app.utils.validators import is_valid_url_async
+
+    # SSRF protection: Double-check that destination URL remains valid/safe
+    # (Mitigates DNS rebinding window between check and fetch)
+    is_valid, _ = await is_valid_url_async(url)
+    if not is_valid:
+        return
+
+    metadata = await fetch_url_metadata(url)
+    if not any(metadata.values()):
+        return
+
+    try:
+        async with async_session_factory() as db:
+            query = update(URL).where(URL.id == url_id).values(metadata_=metadata)
+            await db.execute(query)
+            await db.commit()
+    except Exception as e:
+        logger.error(f"Failed to save metadata for URL {url_id}: {e}")
