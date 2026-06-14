@@ -25,7 +25,7 @@ from sqlalchemy import BigInteger, event, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.pool import NullPool, StaticPool
 
 # Silence noisy debug logs during testing
 logging.getLogger("aiosqlite").setLevel(logging.WARNING)
@@ -95,7 +95,7 @@ if database_url.startswith("postgresql"):
             loop.close()
 
         if is_postgres:
-            test_engine = create_async_engine(database_url, pool_pre_ping=True)
+            test_engine = create_async_engine(database_url, poolclass=NullPool)
     except Exception as e:
         print(
             f"\n[INFO] PostgreSQL probe failed ({e}). "
