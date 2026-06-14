@@ -73,10 +73,10 @@ async def redirect_to_url(
             detail=str(e),
         )
 
-    # Extract client info for analytics
-    client_ip = request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
-    if not client_ip:
-        client_ip = request.client.host if request.client else "unknown"
+    # Extract client info securely for analytics
+    from app.utils.client_ip import get_client_ip
+
+    client_ip = get_client_ip(request)
 
     user_agent = request.headers.get("User-Agent")
     referer = request.headers.get("Referer")

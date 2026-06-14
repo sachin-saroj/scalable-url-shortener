@@ -106,10 +106,10 @@ async def observability_middleware(request: Request, call_next):
         request_id = str(uuid.uuid4())
     request.state.request_id = request_id
 
-    # Get client IP and handle proxy forwarding
-    client_ip = request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
-    if not client_ip:
-        client_ip = request.client.host if request.client else "unknown"
+    # Get client IP and handle proxy forwarding securely
+    from app.utils.client_ip import get_client_ip
+
+    client_ip = get_client_ip(request)
 
     # Bind request variables to structured logging context
     structlog.contextvars.bind_contextvars(
@@ -135,15 +135,13 @@ async def observability_middleware(request: Request, call_next):
         if not is_noise_route:
             # Track HTTP Metrics
             from app.utils.metrics import HTTP_REQUEST_DURATION_SECONDS, HTTP_REQUESTS_TOTAL
+
             HTTP_REQUESTS_TOTAL.labels(
-                method=request.method,
-                path=path,
-                status_code=str(status_code)
+                method=request.method, path=path, status_code=str(status_code)
             ).inc()
-            HTTP_REQUEST_DURATION_SECONDS.labels(
-                method=request.method,
-                path=path
-            ).observe(duration_ms / 1000.0)
+            HTTP_REQUEST_DURATION_SECONDS.labels(method=request.method, path=path).observe(
+                duration_ms / 1000.0
+            )
 
             # Log HTTP access details
             access_logger.info(
@@ -306,6 +304,7 @@ async def readiness_check(
     # Check database
     try:
         from sqlalchemy import text
+
         await db.execute(text("SELECT 1"))
         health["postgres"] = "connected"
     except Exception as e:
@@ -331,10 +330,7 @@ async def readiness_check(
 @app.get("/metrics", tags=["Observability"])
 def metrics_endpoint():
     """Exposes Prometheus metrics."""
-    return Response(
-        content=generate_latest(),
-        media_type=CONTENT_TYPE_LATEST
-    )
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 # ── Register Routers ──────────────────────────────────
