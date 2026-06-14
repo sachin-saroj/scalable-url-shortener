@@ -14,7 +14,7 @@ psycopg2-binary==2.9.10
 redis[hiredis]==5.2.1
 
 # ── Authentication ─────────────────────────
-python-jose[cryptography]==3.3.0
+PyJWT==2.10.1
 passlib[bcrypt]==1.7.4
 bcrypt==4.2.1
 python-multipart==0.0.20
@@ -52,6 +52,5 @@ aiosqlite==0.22.1
 ruff==0.9.1
 mypy==1.14.1
 pre-commit==4.0.1
-types-python-jose==3.3.4.20240106
 types-passlib==1.7.7.20240819
 types-qrcode==8.0.0.20241004

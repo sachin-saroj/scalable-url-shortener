@@ -6,8 +6,8 @@ Unit and integration tests for user registration, authentication, and token mana
 
 from uuid import uuid4
 
+import jwt
 import pytest
-from jose import jwt
 
 from app.config import get_settings
 from app.schemas.user import UserLoginRequest, UserRegisterRequest

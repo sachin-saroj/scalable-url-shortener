@@ -1,13 +1,14 @@
 import pytest
-from app.models.user import User
-from app.models.url import URL
 import sqlalchemy as sa
+
+from app.models.url import URL
+from app.models.user import User
 
 
 @pytest.mark.asyncio
 async def test_admin_stats_access(client, db_session):
     """Test accessing stats endpoint as admin, regular user, and anonymous."""
-    
+
     # 1. Anonymous Access -> 401
     response = await client.get("/api/v1/admin/stats")
     assert response.status_code == 401
@@ -20,7 +21,7 @@ async def test_admin_stats_access(client, db_session):
     }
     await client.post("/api/v1/auth/register", json=reg_payload)
     # login is automatic on register, cookies are populated
-    
+
     response = await client.get("/api/v1/admin/stats")
     assert response.status_code == 403
 
@@ -51,7 +52,7 @@ async def test_admin_stats_access(client, db_session):
 @pytest.mark.asyncio
 async def test_admin_deactivate_override(client, db_session):
     """Test that admin user can deactivate any URL, while regular users cannot."""
-    
+
     # 1. Create a regular user who owns a URL
     user_payload = {
         "email": "owner@example.com",
@@ -59,7 +60,7 @@ async def test_admin_deactivate_override(client, db_session):
         "password": "Password123",
     }
     await client.post("/api/v1/auth/register", json=user_payload)
-    
+
     # Create a short URL
     create_resp = await client.post("/api/v1/shorten", json={"url": "https://google.com"})
     assert create_resp.status_code == 201
@@ -90,7 +91,7 @@ async def test_admin_deactivate_override(client, db_session):
         "password": "Password123",
     }
     await client.post("/api/v1/auth/register", json=admin_payload)
-    
+
     # Elevate role in DB
     query = sa.select(User).where(User.email == "admin@example.com")
     res = await db_session.execute(query)
@@ -100,10 +101,13 @@ async def test_admin_deactivate_override(client, db_session):
 
     # Re-login admin
     client.cookies.clear()
-    await client.post("/api/v1/auth/login", json={
-        "email": "admin@example.com",
-        "password": "Password123",
-    })
+    await client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": "admin@example.com",
+            "password": "Password123",
+        },
+    )
 
     # Admin overrides deactivation -> 200
     admin_deact_resp = await client.post(f"/api/v1/admin/urls/{short_code}/deactivate")

@@ -22,7 +22,8 @@ from typing import Any
 from uuid import UUID
 
 import bcrypt
-from jose import JWTError, jwt
+import jwt
+from jwt import PyJWTError as JWTError
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -204,7 +205,7 @@ class AuthService:
     def _verify_token(self, token: str, expected_type: str) -> dict[str, Any]:
         """Verify and decode a JWT token."""
         try:
-            payload = jwt.decode(
+            payload: dict[str, Any] = jwt.decode(
                 token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
             )
         except JWTError as e:
