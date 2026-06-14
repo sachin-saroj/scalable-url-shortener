@@ -7,6 +7,28 @@ on:
     branches: [main]
 
 jobs:
+  # ── Dependency Audit ────────────────────────────
+  dependency-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: pip-audit
+        working-directory: ./backend
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt --desc
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: npm audit
+        working-directory: ./frontend
+        run: npm audit --audit-level=high
+
   # ── Lint & Format ──────────────────────────────
   lint:
     name: Lint & Format
