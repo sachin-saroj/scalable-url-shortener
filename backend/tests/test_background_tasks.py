@@ -37,7 +37,7 @@ async def test_record_click_background_success(db_session, cache_service):
 @pytest.mark.asyncio
 async def test_redirect_endpoint_triggers_background_task(client, db_session):
     # Setup a test URL
-    url = URL(original_url="https://example.com/target", short_code="testredirect", is_active=True)
+    url = URL(original_url="https://example.com/target", short_code="testredir", is_active=True)
     db_session.add(url)
     await db_session.commit()
     await db_session.refresh(url)
