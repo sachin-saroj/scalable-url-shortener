@@ -32,9 +32,9 @@ CHARSET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 BASE = len(CHARSET)  # 62
 
 CODE_LENGTH = 6
-MODULUS = BASE ** CODE_LENGTH        # 62^6 = 56,800,235,584
+MODULUS = BASE**CODE_LENGTH  # 62^6 = 56,800,235,584
 PRIME_MULTIPLIER = 2147483647  # Must be coprime with MODULUS (62 = 2 * 31)
-PRIME_MULTIPLIER_INV = pow(PRIME_MULTIPLIER, -1, MODULUS)  # modular inverse, Python 3.8+
+PRIME_MULTIPLIER_INV = int(pow(PRIME_MULTIPLIER, -1, MODULUS))  # modular inverse, Python 3.8+
 
 OFFSET = 100000  # keeps small IDs from mapping to 0
 
@@ -121,4 +121,4 @@ def decode_id(code: str) -> int:
     padded = [code[1], code[3], code[5], code[0], code[4], code[2]]
     shuffled = decode("".join(padded))
     val = (shuffled * PRIME_MULTIPLIER_INV) % MODULUS
-    return val - OFFSET
+    return int(val - OFFSET)
