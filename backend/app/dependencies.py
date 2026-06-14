@@ -93,10 +93,10 @@ class RateLimitRule:
         request: Request,
         redis: Redis = Depends(get_redis),
     ):
-        # Get client IP and handle proxy forwarding
-        client_ip = request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
-        if not client_ip:
-            client_ip = request.client.host if request.client else "unknown"
+        # Get client IP and handle proxy forwarding securely
+        from app.utils.client_ip import get_client_ip
+
+        client_ip = get_client_ip(request)
 
         # Scope the key to the specific endpoint path to prevent cross-endpoint starvation
         identifier = f"{client_ip}:{request.url.path}"
@@ -140,7 +140,7 @@ async def get_current_user(
     """
     token = None
     auth_header = request.headers.get("Authorization")
-    if   auth_header:
+    if auth_header:
         parts = auth_header.split(" ")
         if len(parts) == 2 and parts[0].lower() == "bearer":
             token = parts[1]
@@ -179,7 +179,7 @@ async def get_optional_user(
     """
     token = None
     auth_header = request.headers.get("Authorization")
-    if   auth_header:
+    if auth_header:
         parts = auth_header.split(" ")
         if len(parts) == 2 and parts[0].lower() == "bearer":
             token = parts[1]
