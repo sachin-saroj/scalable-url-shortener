@@ -106,6 +106,15 @@ This project is not deployed at production scale, but is architected using patte
 -Asynchronous background processing
 -Separation of read/write workloads
 
+## 🛡️ Security & Deployment Notes
+
+### Reverse Proxy / X-Forwarded-For
+If deploying behind nginx/Traefik/Cloudflare, set `TRUSTED_PROXIES` to the proxy's IP (or Docker bridge gateway, typically `172.18.0.1` in default compose networks). If left empty, the app uses the direct TCP peer IP only — a safe default, but rate-limiting/analytics will see the proxy's IP instead of the real client if you don't configure this.
+
+### Auth Model Notes
+- **Stateless JWT**: Uses access tokens (1h) and refresh tokens (7d).
+- **Token Revocation**: Logout clears HTTP-only cookies client-side; tokens are NOT server-side revoked. A leaked access token remains valid until natural expiry (max 1h). This is a deliberate trade-off (no Redis lookup on every request = faster hot path). For stricter requirements, a Redis-based denylist can be implemented on logout.
+
 ## 🧪 Running Tests
 
 LinkForge has a comprehensive test suite of 95 unit and integration tests covering encoding, validation, caching, security hardening, user registration/login, and URL lifecycle resolution.
