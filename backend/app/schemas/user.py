@@ -100,3 +100,16 @@ class RefreshTokenRequest(BaseModel):
     """Request body for POST /auth/refresh"""
 
     refresh_token: str
+
+
+class AuthResponse(BaseModel):
+    """Authentication response excluding raw tokens in body."""
+
+    user: UserResponse
+    expires_in: int
+
+
+class RefreshResponse(BaseModel):
+    """Refresh token response containing only the token expiration time."""
+
+    expires_in: int

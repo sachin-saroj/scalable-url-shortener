@@ -11,20 +11,22 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response, 
 
 from app.dependencies import DB, CurrentUser, check_auth_rate_limit
 from app.schemas.user import (
+    AuthResponse,
+    RefreshResponse,
     RefreshTokenRequest,
-    TokenResponse,
     UserLoginRequest,
     UserRegisterRequest,
     UserResponse,
 )
 from app.services.auth_service import AuthService
+from app.utils.auth_cookies import clear_auth_cookies, set_auth_cookies
 
 router = APIRouter()
 
 
 @router.post(
     "/register",
-    response_model=dict,
+    response_model=AuthResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Register a new user",
     dependencies=[Depends(check_auth_rate_limit)],
@@ -35,27 +37,13 @@ async def register(request: UserRegisterRequest, db: DB, response: Response):
     try:
         user, tokens = await auth_service.register(request)
         from app.config import get_settings
+
         settings = get_settings()
-        response.set_cookie(
-            key="access_token",
-            value=tokens.access_token,
-            httponly=True,
-            secure=settings.APP_ENV == "production",
-            samesite="lax",
-            max_age=15 * 60,
+        set_auth_cookies(response, tokens, settings)
+        return AuthResponse(
+            user=UserResponse.model_validate(user),
+            expires_in=tokens.expires_in,
         )
-        response.set_cookie(
-            key="refresh_token",
-            value=tokens.refresh_token,
-            httponly=True,
-            secure=settings.APP_ENV == "production",
-            samesite="lax",
-            max_age=7 * 24 * 60 * 60,
-        )
-        return {
-            "user": UserResponse.model_validate(user).model_dump(),
-            "tokens": tokens.model_dump(),
-        }
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -65,7 +53,7 @@ async def register(request: UserRegisterRequest, db: DB, response: Response):
 
 @router.post(
     "/login",
-    response_model=dict,
+    response_model=AuthResponse,
     summary="Login",
     dependencies=[Depends(check_auth_rate_limit)],
 )
@@ -75,27 +63,13 @@ async def login(request: UserLoginRequest, db: DB, response: Response):
     try:
         user, tokens = await auth_service.login(request)
         from app.config import get_settings
+
         settings = get_settings()
-        response.set_cookie(
-            key="access_token",
-            value=tokens.access_token,
-            httponly=True,
-            secure=settings.APP_ENV == "production",
-            samesite="lax",
-            max_age=15 * 60,
+        set_auth_cookies(response, tokens, settings)
+        return AuthResponse(
+            user=UserResponse.model_validate(user),
+            expires_in=tokens.expires_in,
         )
-        response.set_cookie(
-            key="refresh_token",
-            value=tokens.refresh_token,
-            httponly=True,
-            secure=settings.APP_ENV == "production",
-            samesite="lax",
-            max_age=7 * 24 * 60 * 60,
-        )
-        return {
-            "user": UserResponse.model_validate(user).model_dump(),
-            "tokens": tokens.model_dump(),
-        }
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -105,7 +79,7 @@ async def login(request: UserLoginRequest, db: DB, response: Response):
 
 @router.post(
     "/refresh",
-    response_model=TokenResponse,
+    response_model=RefreshResponse,
     summary="Refresh access token",
 )
 async def refresh_token(
@@ -131,24 +105,10 @@ async def refresh_token(
     try:
         tokens = await auth_service.refresh_tokens(refresh_token_val)
         from app.config import get_settings
+
         settings = get_settings()
-        response.set_cookie(
-            key="access_token",
-            value=tokens.access_token,
-            httponly=True,
-            secure=settings.APP_ENV == "production",
-            samesite="lax",
-            max_age=15 * 60,
-        )
-        response.set_cookie(
-            key="refresh_token",
-            value=tokens.refresh_token,
-            httponly=True,
-            secure=settings.APP_ENV == "production",
-            samesite="lax",
-            max_age=7 * 24 * 60 * 60,
-        )
-        return tokens
+        set_auth_cookies(response, tokens, settings)
+        return RefreshResponse(expires_in=tokens.expires_in)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -163,19 +123,9 @@ async def refresh_token(
 async def logout(response: Response):
     """Logout by clearing HTTP-only cookies."""
     from app.config import get_settings
+
     settings = get_settings()
-    response.delete_cookie(
-        key="access_token",
-        httponly=True,
-        secure=settings.APP_ENV == "production",
-        samesite="lax",
-    )
-    response.delete_cookie(
-        key="refresh_token",
-        httponly=True,
-        secure=settings.APP_ENV == "production",
-        samesite="lax",
-    )
+    clear_auth_cookies(response, settings)
     return {"message": "Successfully logged out"}
 
 
