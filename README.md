@@ -67,16 +67,15 @@ cp .env.example .env
 
 ### 2. Start the Application
 
-**🌟 For Windows Users (1-Click Setup):**
-Simply double-click the `setup_and_run.bat` file in the project folder. 
-It will automatically:
-- Check if Docker is running
-- Auto-generate the `.env` configuration file
-- Install dependencies and build all Docker containers
-- Start the server and provide the necessary URLs
+**🛠️ For Local Development (with hot reload & exposed ports):**
+To start the services with live code reloading, volume mounts, and database/Redis ports exposed to the host for debugging, run:
 
-**🍎 For Mac/Linux Users (Manual):**
-Build and start all services using Docker Compose:
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
+```
+
+**🚀 For Production-Like / Production-Leaning Execution:**
+To run the containers in a hardened state where Postgres and Redis are isolated (ports not exposed) and without volume mounts or Uvicorn reload, run:
 
 ```bash
 docker-compose up --build -d

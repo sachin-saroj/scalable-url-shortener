@@ -8,8 +8,6 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-shortener}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-url_shortener}
-    ports:
-      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -23,8 +21,6 @@ services:
     image: redis:7-alpine
     container_name: shortener-redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
       - redisdata:/data
@@ -46,8 +42,6 @@ services:
       - .env
     ports:
       - "8000:8000"
-    volumes:
-      - ./backend:/app
     depends_on:
       db:
         condition: service_healthy
@@ -55,7 +49,7 @@ services:
         condition: service_healthy
     command: >
       sh -c "alembic upgrade head &&
-             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+             uvicorn app.main:app --host 0.0.0.0 --port 8000"
 
   # ── Celery Worker ────────────────────────────────────
   celery-worker:
@@ -67,8 +61,6 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    volumes:
-      - ./backend:/app
     depends_on:
       db:
         condition: service_healthy
@@ -86,8 +78,6 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    volumes:
-      - ./backend:/app
     depends_on:
       db:
         condition: service_healthy
@@ -105,9 +95,6 @@ services:
     restart: unless-stopped
     ports:
       - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
     depends_on:
       - backend
     command: npm run dev -- --host 0.0.0.0

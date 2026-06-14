@@ -1,0 +1,34 @@
+services:
+  # ── PostgreSQL ───────────────────────────────────────
+  db:
+    ports:
+      - "5432:5432"
+
+  # ── Redis ────────────────────────────────────────────
+  redis:
+    ports:
+      - "6379:6379"
+
+  # ── FastAPI Backend ──────────────────────────────────
+  backend:
+    volumes:
+      - ./backend:/app
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  # ── Celery Worker ────────────────────────────────────
+  celery-worker:
+    volumes:
+      - ./backend:/app
+
+  # ── Celery Beat (Scheduler) ─────────────────────────
+  celery-beat:
+    volumes:
+      - ./backend:/app
+
+  # ── React Frontend ──────────────────────────────────
+  frontend:
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
