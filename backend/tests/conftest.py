@@ -86,7 +86,6 @@ if database_url.startswith("postgresql"):
         loop = asyncio.new_event_loop()
         try:
             loop.run_until_complete(check_probe())
-            test_engine = create_async_engine(database_url, pool_pre_ping=True)
             is_postgres = True
         finally:
             loop.close()
@@ -94,6 +93,9 @@ if database_url.startswith("postgresql"):
             loop = asyncio.new_event_loop()
             loop.run_until_complete(probe_engine.dispose())
             loop.close()
+
+        if is_postgres:
+            test_engine = create_async_engine(database_url, pool_pre_ping=True)
     except Exception as e:
         print(
             f"\n[INFO] PostgreSQL probe failed ({e}). "
