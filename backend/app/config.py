@@ -94,6 +94,13 @@ class Settings(BaseSettings):
     # ── CORS ───────────────────────────────────
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
 
+    # ── Trusted Proxies ────────────────────────
+    TRUSTED_PROXIES: str = ""  # comma-separated IPs of reverse proxies (e.g., "172.18.0.1")
+
+    @property
+    def trusted_proxies_list(self) -> list[str]:
+        return [ip.strip() for ip in self.TRUSTED_PROXIES.split(",") if ip.strip()]
+
     @property
     def cors_origins_list(self) -> list[str]:
         if not self.CORS_ORIGINS:
