@@ -138,3 +138,80 @@ async def test_redirect_exceptions(mock_get_cache, mock_get_db, mock_url_service
     assert resp.status_code == status.HTTP_400_BAD_REQUEST
     data = resp.json()
     assert data["error"]["code"] == "BAD_REQUEST"
+
+
+# ── 6. Phase 2 Security Hardening Tests ────────────────
+@pytest.mark.asyncio
+async def test_xff_ignored_when_not_trusted_proxy(client, test_redis):
+    await test_redis.flushdb()
+    response = await client.get("/api/v1/qr/test123", headers={"X-Forwarded-For": "1.2.3.4"})
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    keys = await test_redis.keys("rate:*")
+    assert len(keys) > 0
+    for key in keys:
+        assert "1.2.3.4" not in key
+        assert "testclient" in key or "127.0.0.1" in key
+
+
+@pytest.mark.asyncio
+async def test_xff_honored_when_trusted_proxy(monkeypatch, client, test_redis):
+    await test_redis.flushdb()
+    from app.utils.client_ip import settings
+
+    monkeypatch.setattr(settings, "TRUSTED_PROXIES", "testclient, 127.0.0.1")
+
+    response = await client.get("/api/v1/qr/test123", headers={"X-Forwarded-For": "1.2.3.4"})
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    keys = await test_redis.keys("rate:*")
+    assert len(keys) > 0
+    found_xff_ip = False
+    for key in keys:
+        if "1.2.3.4" in key:
+            found_xff_ip = True
+    assert found_xff_ip, f"Expected 1.2.3.4 in keys: {keys}"
+
+
+@pytest.mark.asyncio
+async def test_login_response_excludes_raw_tokens(client):
+    # Register first
+    reg_payload = {
+        "email": "excludetokens@example.com",
+        "username": "excludetokens",
+        "password": "SecurePassword123",
+    }
+    reg_res = await client.post("/api/v1/auth/register", json=reg_payload)
+    assert reg_res.status_code == status.HTTP_201_CREATED
+
+    # Login
+    login_payload = {
+        "email": "excludetokens@example.com",
+        "password": "SecurePassword123",
+    }
+    res = await client.post("/api/v1/auth/login", json=login_payload)
+    assert res.status_code == status.HTTP_200_OK
+    body = res.json()
+    assert "access_token" not in body
+    assert "refresh_token" not in body
+    assert "tokens" not in body
+    assert "access_token" in res.cookies
+    assert "refresh_token" in res.cookies
+
+
+@pytest.mark.asyncio
+async def test_qr_endpoint_rate_limited(client, test_redis):
+    await test_redis.flushdb()
+
+    # Send 100 requests (which should not hit rate limits)
+    for _ in range(100):
+        response = await client.get("/api/v1/qr/rate-limit-test")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    # The 101st request should trigger rate limit (429)
+    response = await client.get("/api/v1/qr/rate-limit-test")
+    assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+    data = response.json()
+    assert "error" in data
+    assert data["error"]["code"] == "TOO_MANY_REQUESTS"
+    assert "Rate limit exceeded" in data["error"]["message"]

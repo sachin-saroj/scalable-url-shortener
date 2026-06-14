@@ -26,7 +26,9 @@ class TestIntegration:
         assert res_reg.status_code == 201
         reg_data = res_reg.json()
         assert reg_data["user"]["email"] == "inttest@example.com"
-        assert reg_data["tokens"]["access_token"] is not None
+        assert "access_token" in res_reg.cookies
+        assert "refresh_token" in res_reg.cookies
+        assert "tokens" not in reg_data
 
         # 2. Duplicate registration should fail with 409 Conflict
         res_dup = await client.post("/api/v1/auth/register", json=reg_payload)
@@ -38,7 +40,9 @@ class TestIntegration:
         assert res_login.status_code == 200
         login_data = res_login.json()
         assert login_data["user"]["username"] == "intuser"
-        assert login_data["tokens"]["access_token"] is not None
+        assert "access_token" in res_login.cookies
+        assert "refresh_token" in res_login.cookies
+        assert "tokens" not in login_data
 
     async def test_url_creation_and_resolution_cycle(self, client):
         # 1. Anonymous URL Shortening
@@ -61,7 +65,7 @@ class TestIntegration:
         assert "private/internal addresses" in res_unsafe.json()["error"]["message"]
 
     async def test_authenticated_url_management(self, client):
-        # 1. Register and Login to get Auth token
+        # 1. Register and Login to get Auth cookies
         reg_payload = {
             "email": "owner_int@example.com",
             "username": "owner_int",
@@ -70,28 +74,26 @@ class TestIntegration:
         await client.post("/api/v1/auth/register", json=reg_payload)
 
         login_payload = {"email": "owner_int@example.com", "password": "Password123"}
-        res_login = await client.post("/api/v1/auth/login", json=login_payload)
-        token = res_login.json()["tokens"]["access_token"]
-        headers = {"Authorization": f"Bearer {token}"}
+        await client.post("/api/v1/auth/login", json=login_payload)
 
         # 2. Create custom alias URL
         payload = {"url": "https://crates.io", "custom_alias": "my-crates"}
-        res_create = await client.post("/api/v1/shorten", json=payload, headers=headers)
+        res_create = await client.post("/api/v1/shorten", json=payload)
         assert res_create.status_code == 201
 
         # 3. List URLs
-        res_list = await client.get("/api/v1/urls", headers=headers)
+        res_list = await client.get("/api/v1/urls")
         assert res_list.status_code == 200
         list_data = res_list.json()
         assert list_data["total"] == 1
         assert list_data["urls"][0]["short_code"] == "my-crates"
 
         # 4. Deactivate URL
-        res_delete = await client.delete("/api/v1/urls/my-crates", headers=headers)
+        res_delete = await client.delete("/api/v1/urls/my-crates")
         assert res_delete.status_code == 204
 
         # 5. List URLs again (should be empty list as deactivated)
-        res_list_after = await client.get("/api/v1/urls", headers=headers)
+        res_list_after = await client.get("/api/v1/urls")
         assert res_list_after.json()["total"] == 0
 
         # 6. Resolution of deactivated URL should return 404
