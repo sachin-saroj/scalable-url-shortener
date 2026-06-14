@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.dependencies import get_db
+from app.dependencies import check_rate_limit, get_db
 from app.models.url import URL
 from app.services.qr_service import generate_qr_code
 
@@ -26,6 +26,7 @@ settings = get_settings()
         200: {"content": {"image/png": {}}, "description": "QR code image"},
         404: {"description": "Short URL not found"},
     },
+    dependencies=[Depends(check_rate_limit)],
 )
 async def get_qr_code(
     short_code: str,
