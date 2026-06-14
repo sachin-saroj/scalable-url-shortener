@@ -81,5 +81,5 @@ def test_cleanup_expired_urls_uses_redis_from_url():
         mock_from_url.assert_called_once_with(settings.REDIS_URL)
         # Assert delete was called for the custom_alias/short_code
         mock_redis_instance = mock_from_url.return_value
-        mock_redis_instance.delete.assert_called_once_with("url:customalias1")
-        mock_redis_instance.close.assert_called_once()
+        mock_redis_instance.__enter__.return_value.delete.assert_called_once_with("url:customalias1")
+        mock_redis_instance.__exit__.assert_called_once()

@@ -107,12 +107,11 @@ def cleanup_expired_urls(self):
         if deactivated:
             import redis as sync_redis
 
-            r = sync_redis.Redis.from_url(settings.REDIS_URL)
-            for row in deactivated:
-                code = row[1] or row[0]  # custom_alias or short_code
-                if code:
-                    r.delete(f"url:{code}")
-            getattr(r, "close")()
+            with sync_redis.Redis.from_url(settings.REDIS_URL) as r:
+                for row in deactivated:
+                    code = row[1] or row[0]  # custom_alias or short_code
+                    if code:
+                        r.delete(f"url:{code}")
 
         logger.info(f"Cleaned up {len(deactivated)} expired URLs")
         session.close()
