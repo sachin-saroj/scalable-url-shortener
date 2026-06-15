@@ -96,6 +96,16 @@ class RateLimiter:
             if weighted_count >= self.max_requests:
                 # Calculate retry-after
                 retry_after = int(self.window_seconds - elapsed) + 1
+
+                # Extract client IP and path from scoped identifier for auditing
+                parts = identifier.split(":", 1)
+                ip = parts[0] if parts else identifier
+                path = parts[1] if len(parts) > 1 else "unknown"
+                logger.warning(
+                    f"Rate limit exceeded for client {ip} on path {path}. "
+                    f"Weighted count: {weighted_count:.1f}/{self.max_requests}."
+                )
+
                 return False, {
                     "detail": f"Rate limit exceeded. Try again in {retry_after} seconds.",
                     "retry_after": retry_after,
