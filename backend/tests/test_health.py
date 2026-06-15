@@ -54,6 +54,7 @@ async def test_readiness_check_postgres_failure(client):
         yield mock_session
 
     from app.main import app
+
     app.dependency_overrides[get_db] = override_get_db
 
     try:
@@ -82,6 +83,7 @@ async def test_readiness_check_redis_failure(client):
         return mock_redis
 
     from app.main import app
+
     app.dependency_overrides[get_redis] = override_get_redis
 
     try:

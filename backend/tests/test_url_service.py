@@ -192,6 +192,7 @@ class TestURLService:
 
         # Create 105 URLs directly in the database
         from app.models.url import URL
+
         for i in range(105):
             url_rec = URL(
                 id=i + 1000,
