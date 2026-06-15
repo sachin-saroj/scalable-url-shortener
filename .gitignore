@@ -66,3 +66,8 @@ alembic/versions/__pycache__/
 skills-lock.json
 .planning/
 
+# Celery
+celerybeat-schedule
+celerybeat-schedule.db
+*celerybeat-schedule*
+
