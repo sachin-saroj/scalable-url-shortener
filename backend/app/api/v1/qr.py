@@ -4,7 +4,7 @@ QR Code Endpoint
 GET /api/v1/qr/{short_code} — Generate QR code for a short URL
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,7 +30,7 @@ settings = get_settings()
 )
 async def get_qr_code(
     short_code: str,
-    size: int = 10,
+    size: int = Query(default=10, ge=5, le=20, description="QR code block size (5-20)"),
     db: AsyncSession = Depends(get_db),
 ):
     """Generate a QR code image for the given short URL."""
@@ -45,8 +45,6 @@ async def get_qr_code(
             detail="Short URL not found",
         )
 
-    # Clamp size
-    size = max(5, min(20, size))
 
     # Generate QR code for the full short URL
     full_url = f"{settings.BASE_URL}/{url_record.effective_code}"
