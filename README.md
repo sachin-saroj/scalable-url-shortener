@@ -114,6 +114,35 @@ If deploying behind nginx/Traefik/Cloudflare, set `TRUSTED_PROXIES` to the proxy
 - **Stateless JWT**: Uses access tokens (1h) and refresh tokens (7d).
 - **Token Revocation**: Logout clears HTTP-only cookies client-side; tokens are NOT server-side revoked. A leaked access token remains valid until natural expiry (max 1h). This is a deliberate trade-off (no Redis lookup on every request = faster hot path). For stricter requirements, a Redis-based denylist can be implemented on logout.
 
+## 📋 Production Deployment & Verification Checklist
+
+To verify that a production deployment of LinkForge is hardened and properly configured, perform the following verification steps:
+
+1. **Security Headers Verification**
+   Verify that all responses return security-hardening headers. You can test this using curl:
+   ```bash
+   curl -I http://localhost:8000/health
+   ```
+   Check for the presence of:
+   - `X-Content-Type-Options: nosniff`
+   - `X-Frame-Options: DENY`
+   - `Referrer-Policy: no-referrer`
+   - `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`
+
+2. **Trusted Proxy Verification**
+   If deploying behind a reverse proxy (e.g., Nginx, Traefik, or Cloudflare), ensure that:
+   - `TRUSTED_PROXIES` environment variable is set to the proxy's IP range (e.g. `127.0.0.1` or the Docker bridge IP).
+   - The proxy is configured to forward headers: `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;` and `proxy_set_header X-Real-IP $remote_addr;`.
+
+3. **Database Migrations**
+   Before starting the application, run database migrations to ensure the schema is up-to-date:
+   ```bash
+   docker-compose exec backend alembic upgrade head
+   ```
+
+4. **Rate Limiting Hardening**
+   Verify rate limits are active. Make multiple rapid requests to check that `/api/v1/shorten` returns `HTTP 429 Too Many Requests` after exceeding limits.
+
 ## 🧪 Running Tests
 
 LinkForge has a comprehensive test suite of 95 unit and integration tests covering encoding, validation, caching, security hardening, user registration/login, and URL lifecycle resolution.
