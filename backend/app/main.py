@@ -307,6 +307,9 @@ async def readiness_check(
 
         await db.execute(text("SELECT 1"))
         health["postgres"] = "connected"
+        if db.bind is not None:
+            health["postgres_dialect"] = db.bind.dialect.name
+            health["postgres_driver"] = db.bind.dialect.driver
     except Exception as e:
         logger.error("readiness_check_postgres_failed", error=str(e))
         health["postgres"] = "disconnected"
