@@ -175,7 +175,7 @@ def get_error_code(status_code: int) -> str:
         status.HTTP_405_METHOD_NOT_ALLOWED: "METHOD_NOT_ALLOWED",
         status.HTTP_409_CONFLICT: "CONFLICT",
         status.HTTP_410_GONE: "GONE",
-        status.HTTP_422_UNPROCESSABLE_ENTITY: "VALIDATION_ERROR",
+        getattr(status, "HTTP_422_UNPROCESSABLE_CONTENT", 422): "VALIDATION_ERROR",
         status.HTTP_429_TOO_MANY_REQUESTS: "TOO_MANY_REQUESTS",
     }
     return mapping.get(status_code, "INTERNAL_SERVER_ERROR")
