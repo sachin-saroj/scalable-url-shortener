@@ -123,3 +123,19 @@ async def test_admin_deactivate_override(client, db_session):
     # Admin deactivating non-existent URL -> 404
     admin_deact_resp_404 = await client.post("/api/v1/admin/urls/nonexistent/deactivate")
     assert admin_deact_resp_404.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_regular_user_cannot_access_admin_stats(client):
+    """Verify that a regular authenticated user cannot access the admin stats endpoint."""
+    user_payload = {
+        "email": "reg_test@example.com",
+        "username": "regtestuser",
+        "password": "Password123",
+    }
+    register_response = await client.post("/api/v1/auth/register", json=user_payload)
+    assert register_response.status_code == 201
+
+    response = await client.get("/api/v1/admin/stats")
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "FORBIDDEN"
