@@ -241,6 +241,30 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
+@app.exception_handler(ValueError)
+async def value_error_exception_handler(request: Request, exc: ValueError):
+    request_id = getattr(request.state, "request_id", None)
+    if not request_id:
+        request_id = str(uuid.uuid4())
+
+    logger.warning(
+        "value_error_exception",
+        error=str(exc),
+        request_id=request_id,
+    )
+
+    return JSONResponse(
+        status_code=400,
+        content={
+            "error": {
+                "code": "BAD_REQUEST",
+                "message": str(exc),
+                "request_id": request_id,
+            }
+        },
+    )
+
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     request_id = getattr(request.state, "request_id", None)
