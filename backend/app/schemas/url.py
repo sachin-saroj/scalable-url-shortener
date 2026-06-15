@@ -62,7 +62,20 @@ class URLCreateRequest(BaseModel):
                 "Custom alias can only contain letters, numbers, hyphens, and underscores"
             )
         # Prevent reserved paths
-        reserved = {"api", "admin", "health", "docs", "redoc", "openapi.json"}
+        reserved = {
+            "api",
+            "admin",
+            "health",
+            "docs",
+            "redoc",
+            "openapi.json",
+            "platform",
+            "login",
+            "register",
+            "dashboard",
+            "metrics",
+            "static",
+        }
         if v.lower() in reserved:
             raise ValueError(f"'{v}' is a reserved path and cannot be used as an alias")
         return v
