@@ -43,6 +43,7 @@ async def test_readiness_check(client):
 async def test_readiness_check_postgres_failure(client):
     """Readiness endpoint should return 503 when Postgres is down."""
     from unittest.mock import AsyncMock
+
     from app.dependencies import get_db
 
     mock_session = AsyncMock()
@@ -71,6 +72,7 @@ async def test_readiness_check_postgres_failure(client):
 async def test_readiness_check_redis_failure(client):
     """Readiness endpoint should return 503 when Redis is down."""
     from unittest.mock import AsyncMock
+
     from app.dependencies import get_redis
 
     mock_redis = AsyncMock()

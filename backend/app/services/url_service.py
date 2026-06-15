@@ -225,6 +225,9 @@ class URLService:
         Returns:
             Tuple of (url_list, total_count)
         """
+        # Prevent resource exhaustion by capping per_page to a maximum of 100
+        per_page = min(per_page, 100)
+
         # Count total
         count_query = select(func.count(URL.id)).where(
             URL.user_id == user_id,
