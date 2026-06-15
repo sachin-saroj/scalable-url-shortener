@@ -26,7 +26,13 @@ settings = get_settings()
 db_url = settings.DATABASE_URL
 assert db_url is not None, "DATABASE_URL is not configured"
 
-# ── Async Engine ───────────────────────────────────────
+# ── Async Engine & Connection Pooling ──────────────────
+# CONNECTION POOL DESIGN:
+# - Production (QueuePool): Keeps a queue of open connections (pool_size=20, max_overflow=10)
+#   to handle highly concurrent FastAPI requests without the cost of repeated TCP handshakes.
+# - Testing (NullPool): Disables pooling entirely. We override the engine in conftest.py
+#   to use NullPool during unit testing. This prevents connection leaks and transaction
+#   locks across different async test event loops.
 engine_kwargs: dict[str, Any] = {
     "echo": settings.APP_DEBUG,  # Log SQL in dev mode
     "pool_pre_ping": True,  # Test connections before use
