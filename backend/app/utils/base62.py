@@ -96,11 +96,21 @@ PERMUTATION: list[int] = [3, 0, 5, 1, 4, 2]
 
 def encode_id(db_id: int) -> str:
     """
-    Shuffle DB id using modular multiplication before encoding.
-    shuffled = (db_id + OFFSET) * PRIME_MULTIPLIER  mod MODULUS
-    Result is zero-padded to CODE_LENGTH, and characters are permuted
-    so that sequential inputs do not produce sorted/sequential codes.
-    Limit: Up to 56.8 billion unique IDs (62^6) can be shuffled without collisions.
+    Shuffles database auto-increment ID using modular multiplicative coprime scaling,
+    pads it to CODE_LENGTH, and permutes characters to obfuscate sequential generation.
+
+    MATHEMATICS:
+    1. Offset offset value (OFFSET) is added to avoid direct zero mapping.
+    2. Scaled value is multiplied by PRIME_MULTIPLIER (2147483647), which is coprime
+       with MODULUS (62^6), ensuring uniqueness and bijectivity (no collisions).
+    3. The resulting modular value is encoded to Base62.
+    4. Code is zero-padded and permuted using PERMUTATION mapping to scatter patterns.
+
+    Args:
+        db_id: Database auto-increment ID (non-negative).
+
+    Returns:
+        A shuffled, 6-character, URL-safe Base62 string.
     """
     if db_id < 0:
         raise ValueError("Cannot encode negative IDs")
@@ -112,7 +122,10 @@ def encode_id(db_id: int) -> str:
 
 
 def decode_id(code: str) -> int:
-    """Inverse of encode_id."""
+    """
+    Decodes a 6-character Base62 code back into the original database integer ID.
+    Reverses the character permutation and applies the modular multiplicative inverse.
+    """
     if len(code) != CODE_LENGTH:
         raise ValueError(f"Code must be exactly {CODE_LENGTH} characters long")
     # Reconstruct the padded string using the inverse permutation mapping:
