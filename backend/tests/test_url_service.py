@@ -185,3 +185,24 @@ class TestURLService:
             assert query_count <= 2
         finally:
             event.remove(sync_engine, "before_cursor_execute", count_query)
+
+    async def test_get_user_urls_pagination_capping(self, db_session, cache_service):
+        service = URLService(db_session, cache_service)
+        user = await self._setup_user(db_session)
+
+        # Create 105 URLs directly in the database
+        from app.models.url import URL
+        for i in range(105):
+            url_rec = URL(
+                id=i + 1000,
+                original_url=f"https://cap-{i}.org",
+                short_code=f"cap-{i}",
+                user_id=user.id,
+            )
+            db_session.add(url_rec)
+        await db_session.commit()
+
+        # Request per_page=200, which should be capped to 100
+        url_list, total = await service.get_user_urls(user.id, page=1, per_page=200)
+        assert total == 105
+        assert len(url_list) == 100
