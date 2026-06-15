@@ -1813,3 +1813,23 @@ textarea:focus-visible,
   mask-composite: exclude;
   pointer-events: none;
 }
+
+/* ── Transference Animation System ──────────────────────── */
+.transference-panel {
+  will-change: transform, opacity;
+  transition: transform 100ms ease-out, opacity 100ms ease-out;
+}
+
+/* ── Dark Input Styling Override ────────────────────────── */
+.form-input-dark {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+.form-input-dark::placeholder {
+  color: #9ca3af !important;
+}
+.form-input-dark:focus {
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15) !important;
+}

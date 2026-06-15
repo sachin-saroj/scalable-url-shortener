@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { api } from '../utils/api';
 
-export default function ShortenForm({ onSuccess }) {
+export default function ShortenForm({ onSuccess, minimal = false }) {
   const [url, setUrl] = useState('');
   const [customAlias, setCustomAlias] = useState('');
   const [expiresIn, setExpiresIn] = useState('');
@@ -59,13 +59,17 @@ export default function ShortenForm({ onSuccess }) {
   }
 
   return (
-    <div className="shorten-section">
-      <form className="shorten-form" onSubmit={handleSubmit} id="shorten-form">
+    <div className="shorten-section w-full">
+      <form 
+        className={minimal ? "liquid-glass border border-white/20 rounded-xl p-6 md:p-8" : "shorten-form"} 
+        onSubmit={handleSubmit} 
+        id="shorten-form"
+      >
         <div className="form-row">
           <div className="form-input-wrapper">
             <input
               type="text"
-              className={`form-input ${error ? 'input-error' : ''}`}
+              className={`form-input ${minimal ? 'form-input-dark' : ''} ${error ? 'input-error' : ''}`}
               placeholder="Paste a long URL to create a route..."
               value={url}
               onChange={(e) => { setUrl(e.target.value); setError(''); }}
@@ -75,7 +79,7 @@ export default function ShortenForm({ onSuccess }) {
           </div>
           <button
             type="submit"
-            className="btn btn-primary"
+            className={minimal ? "bg-white !text-black px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors border-none cursor-pointer flex items-center justify-center gap-2" : "btn btn-primary"}
             disabled={loading}
             id="shorten-btn"
             style={{ minWidth: '120px' }}
@@ -98,7 +102,7 @@ export default function ShortenForm({ onSuccess }) {
 
         <button
           type="button"
-          className="btn btn-ghost btn-sm"
+          className={minimal ? "liquid-glass border border-white/20 !text-white px-4 py-2 rounded-lg text-xs font-medium hover:bg-white/10 transition-colors border-none cursor-pointer flex items-center gap-1" : "btn btn-ghost btn-sm"}
           onClick={() => setShowOptions(!showOptions)}
           style={{ marginTop: '0.75rem' }}
           id="toggle-options"
@@ -122,7 +126,7 @@ export default function ShortenForm({ onSuccess }) {
               <label className="form-label" htmlFor="alias-input">Custom Alias</label>
               <input
                 type="text"
-                className="form-input"
+                className={`form-input ${minimal ? 'form-input-dark' : ''}`}
                 placeholder="my-brand"
                 value={customAlias}
                 onChange={(e) => setCustomAlias(e.target.value)}
@@ -133,7 +137,7 @@ export default function ShortenForm({ onSuccess }) {
               <label className="form-label" htmlFor="expiry-input">Expires In (hours)</label>
               <input
                 type="number"
-                className="form-input"
+                className={`form-input ${minimal ? 'form-input-dark' : ''}`}
                 placeholder="48"
                 min="1"
                 max="8760"
@@ -147,7 +151,7 @@ export default function ShortenForm({ onSuccess }) {
       </form>
 
       {result && (
-        <div className="result-card" id="result-card">
+        <div className={minimal ? "liquid-glass border border-white/20 rounded-xl p-6 mt-6 animate-fadeSlideUp" : "result-card"} id="result-card">
           <p className="result-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
@@ -157,7 +161,7 @@ export default function ShortenForm({ onSuccess }) {
           <div className="result-url">
             <span className="result-url-text" id="result-url">{result.short_url}</span>
             <button
-              className="btn btn-secondary btn-sm"
+              className={minimal ? "liquid-glass border border-white/20 !text-white px-4 py-2 rounded-lg text-xs font-medium hover:bg-white/10 transition-colors cursor-pointer inline-flex items-center gap-1.5" : "btn btn-secondary btn-sm"}
               onClick={handleCopy}
               id="copy-btn"
             >
@@ -182,7 +186,7 @@ export default function ShortenForm({ onSuccess }) {
               href={`/api/v1/qr/${result.short_code}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn btn-secondary btn-sm"
+              className={minimal ? "liquid-glass border border-white/20 !text-white px-4 py-2 rounded-lg text-xs font-medium hover:bg-white/10 transition-colors no-underline inline-flex items-center gap-1.5" : "btn btn-secondary btn-sm"}
               id="qr-btn"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
