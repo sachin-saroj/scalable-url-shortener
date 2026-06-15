@@ -11,6 +11,7 @@ DESIGN:
 - Dependencies injected via FastAPI's Depends()
 """
 
+import structlog
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 
 from app.dependencies import DB, Cache, CurrentUser, OptionalUser, check_rate_limit
@@ -20,6 +21,8 @@ from app.services.security_service import check_url_safety
 from app.services.url_service import URLService
 
 router = APIRouter()
+logger = structlog.get_logger(__name__)
+
 
 
 @router.post(
@@ -59,10 +62,12 @@ async def shorten_url(
             user_id=user.id if user else None,
             background_tasks=background_tasks,
         )
+        logger.info("url_shortened", short_code=result.short_code, user_id=user.id if user else None)
         return result
     except ValueError as e:
         # Determine status code based on error
         error_msg = str(e)
+        logger.warning("url_shortening_failed", error=error_msg, user_id=user.id if user else None)
         if "already taken" in error_msg:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
