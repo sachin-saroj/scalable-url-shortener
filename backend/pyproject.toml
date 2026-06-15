@@ -21,12 +21,29 @@ select = [
     "B",          # flake8-bugbear
     "C4",         # flake8-comprehensions
     "ASYNC",      # flake8-async
-    "RUF"         # Ruff rules
+    "RUF",        # Ruff rules
+    "D"           # pydocstyle docstring checks
 ]
 ignore = [
     "B008",       # Allow function calls in parameter defaults (vital for FastAPI Depends)
     "N802",       # Allow uppercase function/property names for setting matching
     "B904",       # Allow raising exceptions without explicit 'from' chaining at boundaries
+    "D100",       # Missing docstring in public module
+    "D104",       # Missing docstring in public package
+    "D200",       # One-line docstring should fit on one line with quotes
+    "D203",       # 1 blank line required before class docstring
+    "D205",       # 1 blank line required between summary line and description
+    "D212",       # Multi-line docstring summary should start at the first line
+    "D213",       # Multi-line docstring summary should start at the second line
+    "D400",       # First line should end with a period
+    "D401",       # First line should be in imperative mood
+    "D415",       # First line should end with a period, question mark, or exclamation point
+    "D101",       # Missing docstring in public class
+    "D102",       # Missing docstring in public method
+    "D103",       # Missing docstring in public function
+    "D105",       # Missing docstring in magic method
+    "D107",       # Missing docstring in __init__
+    "D413",       # Missing blank line after last section
 ]
 
 # Configure Ruff to automatically fix violations where safe
@@ -35,6 +52,7 @@ unfixable = []
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
+"tests/*" = ["D"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
