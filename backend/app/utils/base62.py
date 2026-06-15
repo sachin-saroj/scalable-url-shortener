@@ -28,15 +28,15 @@ COMMON INTERVIEW MISTAKE:
 """
 
 # Character set: 0-9 (10) + a-z (26) + A-Z (26) = 62 chars
-CHARSET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-BASE = len(CHARSET)  # 62
+CHARSET: str = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+BASE: int = len(CHARSET)  # 62
 
-CODE_LENGTH = 6
-MODULUS = BASE**CODE_LENGTH  # 62^6 = 56,800,235,584
-PRIME_MULTIPLIER = 2147483647  # Must be coprime with MODULUS (62 = 2 * 31)
-PRIME_MULTIPLIER_INV = int(pow(PRIME_MULTIPLIER, -1, MODULUS))  # modular inverse, Python 3.8+
+CODE_LENGTH: int = 6
+MODULUS: int = BASE**CODE_LENGTH  # 62^6 = 56,800,235,584
+PRIME_MULTIPLIER: int = 2147483647  # Must be coprime with MODULUS (62 = 2 * 31)
+PRIME_MULTIPLIER_INV: int = int(pow(PRIME_MULTIPLIER, -1, MODULUS))  # modular inverse, Python 3.8+
 
-OFFSET = 100000  # keeps small IDs from mapping to 0
+OFFSET: int = 100000  # keeps small IDs from mapping to 0
 
 
 def encode(num: int) -> str:
@@ -91,7 +91,7 @@ def decode(code: str) -> int:
 
 
 # Fixed permutation of indices 0 to 5 to scatter sequential patterns in the output string
-PERMUTATION = [3, 0, 5, 1, 4, 2]
+PERMUTATION: list[int] = [3, 0, 5, 1, 4, 2]
 
 
 def encode_id(db_id: int) -> str:
