@@ -22,7 +22,7 @@ export default function Home() {
   const shortenScale = 0.97 + progress * 0.03;
 
   return (
-    <div className="w-full min-h-screen bg-black text-white selection:bg-white/10 selection:text-white relative" ref={heroRef}>
+    <div className="w-full min-h-screen text-white selection:bg-white/10 selection:text-white relative" ref={heroRef}>
       
       {/* Fixed Full-screen Background Video */}
       <div className="fixed inset-0 -z-10 w-full h-full">

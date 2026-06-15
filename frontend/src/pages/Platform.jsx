@@ -10,7 +10,7 @@ export default function Platform() {
   const heroRef = useRef(null);
 
   return (
-    <div className="w-full min-h-screen bg-black text-white selection:bg-white/10 selection:text-white relative">
+    <div className="w-full min-h-screen text-white selection:bg-white/10 selection:text-white relative">
       
       {/* Fixed Background Video */}
       <div className="fixed inset-0 -z-10 w-full h-full">
