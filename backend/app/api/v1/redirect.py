@@ -13,6 +13,7 @@ DESIGN DECISIONS:
 - Redis checked first, DB only on cache miss
 """
 
+import structlog
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,6 +25,8 @@ from app.services.geo_service import get_location
 from app.services.url_service import URLService
 
 router = APIRouter()
+logger = structlog.get_logger(__name__)
+
 
 
 @router.get(
@@ -91,6 +94,8 @@ async def redirect_to_url(
         referer=referer,
     )
 
+    logger.info("url_redirect_success", short_code=short_code, target_url=original_url, client_ip=client_ip)
+
     return RedirectResponse(url=original_url, status_code=status.HTTP_302_FOUND)
 
 
@@ -135,6 +140,5 @@ async def _record_click_background(
                 raise
     except Exception as e:
         # Log but don't crash — analytics failure is non-critical
-        import logging
+        logger.error("click_recording_failed", short_code=short_code, url_id=url_id, error=str(e))
 
-        logging.getLogger(__name__).error(f"Click recording failed: {e}")
