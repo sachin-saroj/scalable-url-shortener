@@ -71,6 +71,14 @@ async def login(request: UserLoginRequest, db: DB, response: Response):
             expires_in=tokens.expires_in,
         )
     except ValueError as e:
+        import structlog
+
+        logger = structlog.get_logger(__name__)
+        logger.warning(
+            "login_failed",
+            email=request.email,
+            error=str(e),
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e),
