@@ -98,3 +98,18 @@ class TestBase62WithOffset:
     def test_code_length_fixed(self):
         for db_id in [1, 100000, 99999999]:
             assert len(encode_id(db_id)) == 6
+
+    def test_encode_id_negative_raises(self):
+        with pytest.raises(ValueError, match="negative"):
+            encode_id(-5)
+
+    def test_decode_id_invalid_length_raises(self):
+        with pytest.raises(ValueError, match="exactly 6 characters"):
+            decode_id("abc")
+        with pytest.raises(ValueError, match="exactly 6 characters"):
+            decode_id("abcdefgh")
+
+    def test_encode_id_no_collisions_sample(self):
+        # Generate 1000 consecutive ID mappings and assert all are unique
+        codes = {encode_id(i) for i in range(1000)}
+        assert len(codes) == 1000
