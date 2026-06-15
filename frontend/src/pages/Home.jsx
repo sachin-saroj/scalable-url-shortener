@@ -11,126 +11,101 @@ import ShortenForm from '../components/ShortenForm';
 import { useAuth } from '../context/AuthContext';
 import useScrollReveal from '../utils/useScrollReveal';
 
+import AnimatedHeading from '../components/AnimatedHeading';
+import FadeIn from '../components/FadeIn';
+
 export default function Home() {
   const { isAuthenticated } = useAuth();
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const heroRef = useRef(null);
 
-  function handleMouseMove(e) {
-    if (!heroRef.current) return;
-    const rect = heroRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    setMousePos({ x, y });
-  }
-
   return (
-    <div className="page-container" style={{ maxWidth: '1200px', padding: '0 2rem 6rem' }}>
+    <div className="w-full min-h-screen bg-black text-white selection:bg-white/10 selection:text-white relative">
       
       {/* ── HERO SECTION ─────────────────────────────── */}
       <section
-        className="hero-section"
+        className="relative w-full min-h-[calc(100vh-88px)] flex flex-col overflow-hidden"
         ref={heroRef}
-        onMouseMove={handleMouseMove}
       >
-        <div className="hero-left">
-          <h1 className="hero-heading">
-            SHORT LINKS <br />
-            BUILT FOR <br />
-            <span className="accent">INFRASTRUCTURE.</span>
-          </h1>
+        {/* Full-screen Background Video */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover -z-10"
+          src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260403_050628_c4e32401-fab4-4a27-b7a8-6e9291cd5959.mp4"
+        />
 
-          <p className="hero-subheading">
-            Sub-50ms routing. Redis-powered caching.
-            Production-grade analytics. Enterprise reliability
-            engineered for teams building at scale.
-          </p>
+        {/* Hero Content Container */}
+        <div className="flex-1 flex flex-col justify-end px-6 md:px-12 lg:px-16 pb-12 lg:pb-16 z-10 w-full">
+          {/* Hero Grid Container */}
+          <div className="w-full lg:grid lg:grid-cols-2 lg:items-end gap-12">
+            
+            {/* Left Column: Main Content */}
+            <div className="flex flex-col items-start">
+              <AnimatedHeading 
+                text={"Shaping tomorrow\nwith vision and action."}
+                className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-normal mb-4 text-white leading-tight tracking-tight"
+                style={{ letterSpacing: '-0.04em' }}
+              />
 
-          <div className="hero-cta-row">
-            {isAuthenticated ? (
-              <Link to="/dashboard" className="btn btn-primary" id="hero-dashboard-btn">
-                Launch Console
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-              </Link>
-            ) : (
-              <>
-                <Link to="/register" className="btn btn-primary" id="hero-signup-btn">
-                  Get Started
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-                </Link>
-                <a href="#architecture" className="btn btn-secondary" id="hero-explore-btn">
-                  System Architecture
-                </a>
-              </>
-            )}
-          </div>
+              <FadeIn delay={800} duration={1000}>
+                <p className="text-base md:text-lg text-gray-300 mb-5 max-w-[520px]">
+                  We back visionaries and craft ventures that define what comes next.
+                </p>
+              </FadeIn>
 
-          <div className="hero-performance">
-            <div className="hero-metric">
-              <span className="hero-metric-value">99.97%</span>
-              <span className="hero-metric-label">Uptime SLA</span>
+              <FadeIn delay={1200} duration={1000} className="w-full">
+                <div className="flex flex-wrap gap-4">
+                  {isAuthenticated ? (
+                    <Link to="/dashboard" className="bg-white !text-black px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors no-underline text-center">
+                      Launch Console
+                    </Link>
+                  ) : (
+                    <Link to="/register" className="bg-white !text-black px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors no-underline text-center">
+                      Start a Chat
+                    </Link>
+                  )}
+                  <a href="#features" className="liquid-glass border border-white/20 text-white px-8 py-3 rounded-lg font-medium hover:bg-white hover:!text-black transition-colors no-underline text-center">
+                    Explore Now
+                  </a>
+                </div>
+              </FadeIn>
             </div>
-            <div className="hero-metric">
-              <span className="hero-metric-value">&lt;47ms</span>
-              <span className="hero-metric-label">P95 Redirect Latency</span>
-            </div>
-            <div className="hero-metric">
-              <span className="hero-metric-value">98.2%</span>
-              <span className="hero-metric-label">Cache Hit Ratio</span>
-            </div>
-          </div>
-        </div>
 
-        <div className="hero-right">
-          <div
-            className="hero-image-wrapper"
-            style={{
-              transform: `translate(${mousePos.x * 15}px, ${mousePos.y * 15}px)`,
-            }}
-          >
-            <img
-              src="/hero-infrastructure.png"
-              alt="Floating data-routing core"
-              width="420"
-              height="420"
-              loading="eager"
-            />
+            {/* Right Column: Tag */}
+            <div className="flex items-end justify-start lg:justify-end mt-8 lg:mt-0">
+              <FadeIn delay={1400} duration={1000}>
+                <div className="liquid-glass border border-white/20 px-6 py-3 rounded-xl">
+                  <span className="text-lg md:text-xl lg:text-2xl font-light text-white">
+                    Investing. Building. Advisory.
+                  </span>
+                </div>
+              </FadeIn>
+            </div>
 
-            {/* Orbiting metrics */}
-            <div className="floating-metric floating-metric--1">
-              <span className="floating-metric__value">99.97%</span>
-              <span className="floating-metric__label">Uptime SLA</span>
-            </div>
-            <div className="floating-metric floating-metric--2">
-              <span className="floating-metric__value">&lt;47ms</span>
-              <span className="floating-metric__label">P95 Latency</span>
-            </div>
-            <div className="floating-metric floating-metric--3">
-              <span className="floating-metric__value">2.1M</span>
-              <span className="floating-metric__label">Redirects / Day</span>
-            </div>
-            <div className="floating-metric floating-metric--4">
-              <span className="floating-metric__value">98.2%</span>
-              <span className="floating-metric__label">Cache Hit</span>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* ── SHORTEN FORM ─────────────────────────────── */}
-      <ShortenForm />
+      {/* ── LOWER CONTENT WRAPPER ────────────────────── */}
+      <div id="features" className="w-full max-w-[1200px] mx-auto px-6 md:px-12 lg:px-16 py-12">
+        {/* ── SHORTEN FORM ─────────────────────────────── */}
+        <ShortenForm />
 
-      {/* ── FEATURE BENTO GRID ───────────────────────── */}
-      <FeatureGrid />
+        {/* ── FEATURE BENTO GRID ───────────────────────── */}
+        <FeatureGrid />
 
-      {/* ── ARCHITECTURE SECTION ─────────────────────── */}
-      <ArchitectureSection />
+        {/* ── ARCHITECTURE SECTION ─────────────────────── */}
+        <ArchitectureSection />
 
-      {/* ── ACTIVITY FEED ────────────────────────────── */}
-      <ActivityFeed />
+        {/* ── ACTIVITY FEED ────────────────────────────── */}
+        <ActivityFeed />
 
-      {/* ── TRUST LAYER ──────────────────────────────── */}
-      <TrustLayer />
+        {/* ── TRUST LAYER ──────────────────────────────── */}
+        <TrustLayer />
+      </div>
+      
     </div>
   );
 }

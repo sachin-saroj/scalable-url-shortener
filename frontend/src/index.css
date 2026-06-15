@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 /* ═══════════════════════════════════════════════════════════
    LinkForge V3 — Premium Infrastructure Platform
    Design System: Editorial + Infrastructure + Minimal Futurism
@@ -6,40 +8,40 @@
 /* ── CSS Variables (Design Tokens) ──────────────────────── */
 :root {
   /* Surface Colors */
-  --bg-primary: #F8F7F4;
-  --bg-secondary: #FFFFFF;
-  --bg-card: #FFFFFF;
-  --bg-card-hover: #FBFBFA;
-  --bg-input: #FFFFFF;
-  --bg-overlay: rgba(17, 17, 17, 0.4);
-  --bg-elevated: #FEFEFE;
+  --bg-primary: #050505;
+  --bg-secondary: #0a0a0c;
+  --bg-card: #0a0a0c;
+  --bg-card-hover: #121215;
+  --bg-input: #0f0f12;
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+  --bg-elevated: #121215;
 
   /* Primary Text */
-  --text-primary: #111111;
-  --text-secondary: #5F6368;
-  --text-tertiary: #8E918F;
+  --text-primary: #ffffff;
+  --text-secondary: #d1d5db; /* gray-300 */
+  --text-tertiary: #9ca3af;
 
   /* Accent Colors */
-  --accent-electric: #0066FF; /* Infrastructure Blue */
-  --accent-electric-dim: rgba(0, 102, 255, 0.04);
-  --accent-electric-glow: rgba(0, 102, 255, 0.12);
-  --accent-purple: #8B5CF6; /* Electric Violet */
-  --accent-purple-dim: rgba(139, 92, 246, 0.04);
-  --accent-purple-glow: rgba(139, 92, 246, 0.12);
+  --accent-electric: #ffffff;
+  --accent-electric-dim: rgba(255, 255, 255, 0.04);
+  --accent-electric-glow: rgba(255, 255, 255, 0.15);
+  --accent-purple: #ffffff;
+  --accent-purple-dim: rgba(255, 255, 255, 0.04);
+  --accent-purple-glow: rgba(255, 255, 255, 0.15);
 
   /* Semantic Status (Muted Pastels) */
-  --status-success: #2E6B34;
-  --status-success-bg: #EEF5EE;
-  --status-warning: #996A00;
-  --status-warning-bg: #FCF4DF;
-  --status-danger: #A63230;
-  --status-danger-bg: #FDF0F1;
-  --status-info: #2372A3;
-  --status-info-bg: #E4F3FE;
+  --status-success: #34d399;
+  --status-success-bg: rgba(52, 211, 153, 0.1);
+  --status-warning: #fbbf24;
+  --status-warning-bg: rgba(251, 191, 36, 0.1);
+  --status-danger: #f87171;
+  --status-danger-bg: rgba(248, 113, 113, 0.1);
+  --status-info: #60a5fa;
+  --status-info-bg: rgba(96, 165, 250, 0.1);
 
   /* Borders & Shadows */
-  --border-color: #E5E4E0;
-  --border-subtle: rgba(17, 17, 17, 0.05);
+  --border-color: rgba(255, 255, 255, 0.15);
+  --border-subtle: rgba(255, 255, 255, 0.05);
   --shadow-subtle: 0 1px 2px rgba(17, 17, 17, 0.02);
   --shadow-medium: 0 4px 12px rgba(17, 17, 17, 0.04);
   --shadow-lifted: 0 12px 30px rgba(17, 17, 17, 0.06);
@@ -93,7 +95,9 @@ html {
 }
 
 body {
-  font-family: var(--font-body);
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   line-height: 1.6;
@@ -579,7 +583,7 @@ a:hover {
 
 .btn-primary {
   background: var(--text-primary);
-  color: #ffffff;
+  color: #000000;
   border-color: var(--text-primary);
 }
 
@@ -1781,4 +1785,31 @@ textarea:focus-visible,
   outline: 2px solid var(--accent-electric) !important;
   outline-offset: 3px !important;
   box-shadow: 0 0 0 4px var(--accent-electric-glow) !important;
+}
+
+/* ── Liquid Glass Utility ────────────────────────────── */
+.liquid-glass {
+  background: rgba(0, 0, 0, 0.4);
+  background-blend-mode: luminosity;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: none;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+.liquid-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.4px;
+  background: linear-gradient(180deg,
+    rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 20%,
+    rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%,
+    rgba(255,255,255,0.1) 80%, rgba(255,255,255,0.3) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
