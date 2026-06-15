@@ -133,6 +133,10 @@ class Settings(BaseSettings):
         ):
             raise RuntimeError("JWT_SECRET_KEY must be changed from the default value.")
 
+        # Normalize BASE_URL: strip trailing slashes
+        if self.BASE_URL and self.BASE_URL.endswith("/"):
+            self.BASE_URL = self.BASE_URL.rstrip("/")
+
         # Check SECRET_KEY
         if self.SECRET_KEY in (
             "change-me",
