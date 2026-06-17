@@ -15,6 +15,7 @@ import structlog
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 
 from app.dependencies import DB, Cache, CurrentUser, OptionalUser, check_rate_limit
+from app.schemas.bulk import BulkURLCreateRequest, BulkURLCreateResponse, BulkURLItemResult
 from app.schemas.dashboard_stats import DashboardStatsResponse
 from app.schemas.url import URLCreateRequest, URLListItem, URLListResponse, URLResponse
 from app.services.security_service import check_url_safety
@@ -77,6 +78,70 @@ async def shorten_url(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=error_msg,
         )
+
+
+@router.post(
+    "/shorten/bulk",
+    response_model=BulkURLCreateResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Bulk shorten URLs",
+    description="Create up to 50 shortened URLs in a single request. Partial failures are reported per-item.",
+    dependencies=[Depends(check_rate_limit)],
+)
+async def bulk_shorten_urls(
+    request: BulkURLCreateRequest,
+    db: DB,
+    cache: Cache,
+    user: OptionalUser,
+    background_tasks: BackgroundTasks,
+):
+    """
+    Bulk shorten multiple URLs.
+
+    - Processes each URL independently
+    - Security checks applied per URL
+    - Partial failures don't block successful items
+    """
+    # Pre-filter unsafe URLs
+    safe_requests = []
+    results: list[BulkURLItemResult] = []
+
+    for i, url_req in enumerate(request.urls):
+        is_safe, reason = await check_url_safety(url_req.url)
+        if not is_safe:
+            results.append(BulkURLItemResult(
+                index=i, success=False, error=f"URL rejected: {reason}",
+            ))
+        else:
+            safe_requests.append((i, url_req))
+
+    # Process safe URLs
+    url_service = URLService(db, cache)
+    for orig_index, url_req in safe_requests:
+        try:
+            result = await url_service.create_short_url(
+                url_req,
+                user_id=user.id if user else None,
+                background_tasks=background_tasks,
+            )
+            results.append(BulkURLItemResult(
+                index=orig_index, success=True, data=result,
+            ))
+        except ValueError as e:
+            results.append(BulkURLItemResult(
+                index=orig_index, success=False, error=str(e),
+            ))
+
+    # Sort by original index
+    results.sort(key=lambda r: r.index)
+    succeeded = sum(1 for r in results if r.success)
+
+    return BulkURLCreateResponse(
+        total=len(request.urls),
+        succeeded=succeeded,
+        failed=len(request.urls) - succeeded,
+        results=results,
+    )
 
 
 @router.get(
