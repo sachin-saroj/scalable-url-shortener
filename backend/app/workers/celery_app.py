@@ -47,12 +47,20 @@ celery_app.conf.beat_schedule = {
     # Aggregate daily analytics every hour
     "aggregate-daily-analytics": {
         "task": "app.workers.tasks.aggregate_daily_analytics",
-        "schedule": crontab(minute="0"),  # Every hour
+        "schedule": crontab(minute="0"),  # Every hour, at :00
     },
-    # Clean up expired URLs every 15 minutes
+    # Clean up expired URLs every 6 hours
+    # URL expiry is hour-granularity, so 15-minute checks are excessive.
+    # Running every 6 hours balances timeliness with resource efficiency.
     "cleanup-expired-urls": {
         "task": "app.workers.tasks.cleanup_expired_urls",
-        "schedule": crontab(minute="*/15"),  # Every 15 minutes
+        "schedule": crontab(minute="0", hour="*/6"),  # Every 6 hours
+    },
+    # Worker health ping — verifies the task pipeline is functioning.
+    # Logs a heartbeat every 30 minutes for monitoring systems to track.
+    "worker-health-ping": {
+        "task": "app.workers.tasks.worker_health_ping",
+        "schedule": crontab(minute="*/30"),  # Every 30 minutes
     },
 }
 

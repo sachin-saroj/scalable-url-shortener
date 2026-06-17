@@ -119,3 +119,16 @@ def cleanup_expired_urls(self):
     except Exception as e:
         logger.error(f"URL cleanup failed: {e}")
         raise self.retry(exc=e) from e
+
+
+@celery_app.task(bind=True)  # type: ignore[no-untyped-call]
+def worker_health_ping(self):
+    """
+    Heartbeat task for monitoring worker liveness.
+
+    Logs a heartbeat message so monitoring systems (Prometheus, Grafana,
+    Datadog) can verify the Celery task pipeline is functioning end-to-end.
+    """
+    logger.info("worker_health_ping: Celery worker is alive and processing tasks")
+    return {"status": "healthy", "worker": self.request.hostname}
+
