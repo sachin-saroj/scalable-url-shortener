@@ -276,6 +276,41 @@ class URLService:
 
         return url_list, total
 
+    async def create_bulk_short_urls(
+        self,
+        requests: list,
+        user_id: UUID | None = None,
+        background_tasks: BackgroundTasks | None = None,
+    ) -> list[dict[str, Any]]:
+        """
+        Create multiple shortened URLs in a single operation.
+
+        Processes each URL independently — one failure doesn't block others.
+        Returns a list of result dicts with index, success, data/error.
+        """
+        results: list[dict[str, Any]] = []
+
+        for i, req in enumerate(requests):
+            try:
+                response = await self.create_short_url(
+                    req, user_id=user_id, background_tasks=background_tasks,
+                )
+                results.append({
+                    "index": i,
+                    "success": True,
+                    "data": response,
+                    "error": None,
+                })
+            except (ValueError, LookupError) as e:
+                results.append({
+                    "index": i,
+                    "success": False,
+                    "data": None,
+                    "error": str(e),
+                })
+
+        return results
+
     async def deactivate_url(self, code: str, user_id: UUID) -> bool:
         """Soft-delete a URL (only by owner)."""
         url_record = await self._find_by_code(code)
