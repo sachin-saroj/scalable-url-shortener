@@ -499,7 +499,29 @@ a:hover {
 .bento-grid {
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 900px) {
+  .bento-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .bento-grid > div[style*="span 3"] {
+    grid-column: span 2 !important;
+  }
+  .bento-grid > div[style*="span 2"] {
+    grid-column: span 2 !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .bento-grid {
+    grid-template-columns: 1fr;
+  }
+  .bento-grid > div[style*="span 3"],
+  .bento-grid > div[style*="span 2"] {
+    grid-column: span 1 !important;
+  }
 }
 
 .bento-cell {
@@ -1393,14 +1415,17 @@ a:hover {
 
 .arch-visualizer__title {
   font-family: var(--font-body);
-  font-size: 0.7rem;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--text-tertiary);
+  letter-spacing: 4px;
+  color: rgba(255,255,255,0.6);
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  border-top: 1px solid rgba(255,255,255,0.15);
+  padding-top: 12px;
+  margin-bottom: 24px;
 }
 
 .arch-visualizer__controls {
@@ -1411,7 +1436,7 @@ a:hover {
 .arch-svg-container {
   position: relative;
   width: 100%;
-  height: 200px;
+  height: 350px;
 }
 
 .architecture-svg {
@@ -1420,7 +1445,7 @@ a:hover {
 }
 
 .connection-line {
-  stroke: var(--border-color);
+  stroke: rgba(255, 255, 255, 0.5);
   stroke-width: 1.5px;
   fill: none;
   transition: all var(--duration-normal) var(--ease-out-expo);
@@ -1480,7 +1505,7 @@ a:hover {
 
 .node-text-title {
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   fill: var(--text-primary);
 }
@@ -1789,29 +1814,12 @@ textarea:focus-visible,
 
 /* ── Liquid Glass Utility ────────────────────────────── */
 .liquid-glass {
-  background: rgba(0, 0, 0, 0.4);
-  background-blend-mode: luminosity;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  border: none;
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
-  position: relative;
-  overflow: hidden;
-}
-.liquid-glass::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1.4px;
-  background: linear-gradient(180deg,
-    rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 20%,
-    rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%,
-    rgba(255,255,255,0.1) 80%, rgba(255,255,255,0.3) 100%);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 /* ── Transference Animation System ──────────────────────── */

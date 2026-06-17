@@ -15,12 +15,12 @@ export default function Navbar() {
         aria-label="Main navigation"
       >
         {/* Left: Brand logo */}
-        <Link to="/" className="text-2xl font-semibold tracking-tight !text-white hover:!text-gray-300 transition-colors no-underline">
-          LinkForge
+        <Link to="/" className="tracking-wide !text-white hover:!text-gray-300 transition-colors no-underline" style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 400 }}>
+          LinkForge®
         </Link>
 
         {/* Center: Navigation links (hidden on mobile, visible md+) */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-8 md:absolute md:left-1/2 md:-translate-x-1/2">
           <a href="/#shorten" className="text-sm !text-white hover:!text-gray-300 transition-colors duration-200 no-underline font-medium">
             Shorten
           </a>
@@ -53,7 +53,7 @@ export default function Navbar() {
               </button>
               <Link 
                 to="/dashboard" 
-                className="bg-white !text-black px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors no-underline"
+                className="bg-white !text-black px-6 py-2 rounded-full text-sm font-medium hover:bg-gray-100 transition-colors no-underline"
                 id="console-btn"
               >
                 Console
@@ -66,7 +66,7 @@ export default function Navbar() {
               </Link>
               <Link 
                 to="/register" 
-                className="bg-white !text-black px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors no-underline"
+                className="bg-white !text-black px-6 py-2 rounded-full text-sm font-medium hover:bg-gray-100 transition-colors no-underline"
                 id="register-nav-btn"
               >
                 Get Started

@@ -37,57 +37,61 @@ export default function Home() {
       </div>
 
       {/* ── HERO SECTION ── */}
-      <section className="relative w-full min-h-screen flex flex-col justify-end px-6 md:px-12 lg:px-16 pb-12 lg:pb-16">
+      <section className="relative w-full min-h-screen flex flex-col justify-center items-center px-6 md:px-12 lg:px-16 pt-24 pb-12">
         <div 
-          className="transference-panel w-full lg:grid lg:grid-cols-2 lg:items-end gap-12 z-10"
+          className="transference-panel w-full max-w-[850px] z-10 flex flex-col items-center text-center"
           style={{
             opacity: heroOpacity,
             transform: `translateY(${heroTranslateY}px) scale(${heroScale})`,
             pointerEvents: progress > 0.5 ? 'none' : 'auto',
           }}
         >
-          {/* Left Column: Main Content */}
-          <div className="flex flex-col items-start">
-            <AnimatedHeading 
-              text={"Routing the web\nwith speed and precision."}
-              className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-normal mb-4 text-white leading-tight tracking-tight"
-              style={{ letterSpacing: '-0.04em' }}
-            />
+          {/* Tagline Badge */}
+          <FadeIn delay={400} duration={1000} className="mb-6">
+            <div className="liquid-glass border border-white/25 px-5 py-2 rounded-full inline-block" style={{ background: 'rgba(0,0,0,0.65)' }}>
+              <span className="font-semibold uppercase" style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)', letterSpacing: '3px', textShadow: '0px 1px 6px rgba(0,0,0,0.8)' }}>
+                Shorten. Track. Scale.
+              </span>
+            </div>
+          </FadeIn>
 
-            <FadeIn delay={800} duration={1000}>
-              <p className="text-base md:text-lg text-gray-300 mb-5 max-w-[520px]">
-                Sub-50ms Redis-backed redirects, custom aliases, analytics, and QR.
-              </p>
-            </FadeIn>
+          {/* Main Content */}
+          <AnimatedHeading 
+            text={"Routing the web\nwith speed and precision."}
+            className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-light mb-6 text-white leading-tight tracking-tight text-center"
+            style={{ letterSpacing: '-0.02em', fontFamily: 'var(--font-display)' }}
+          />
 
-            <FadeIn delay={1200} duration={1000} className="w-full">
-              <div className="flex flex-wrap gap-4">
-                {isAuthenticated ? (
-                  <Link to="/dashboard" className="bg-white !text-black px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors no-underline text-center">
-                    Launch Console
-                  </Link>
-                ) : (
-                  <a href="#shorten" className="bg-white !text-black px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors no-underline text-center">
-                    Shorten Now
-                  </a>
-                )}
-                <Link to="/platform" className="liquid-glass border border-white/20 text-white px-8 py-3 rounded-lg font-medium hover:bg-white hover:!text-black transition-colors no-underline text-center">
-                  Explore Platform
+          <FadeIn delay={800} duration={1000}>
+            <p className="text-base md:text-lg text-white/60 mb-8 max-w-[600px] font-light leading-relaxed">
+              Sub-50ms Redis-backed redirects, custom aliases, analytics, and QR.
+            </p>
+          </FadeIn>
+
+          <FadeIn delay={1200} duration={1000} className="w-full">
+            <div className="flex flex-wrap justify-center gap-4">
+              {isAuthenticated ? (
+                <Link 
+                  to="/dashboard" 
+                  className="px-8 py-3 rounded-full font-medium hover:bg-gray-100 transition-colors no-underline text-center"
+                  style={{ backgroundColor: '#ffffff', color: '#000000', boxShadow: '0 4px 15px rgba(255,255,255,0.25)' }}
+                >
+                  Launch Console
                 </Link>
-              </div>
-            </FadeIn>
-          </div>
-
-          {/* Right Column: Tag */}
-          <div className="flex items-end justify-start lg:justify-end mt-8 lg:mt-0">
-            <FadeIn delay={1400} duration={1000}>
-              <div className="liquid-glass border border-white/20 px-6 py-3 rounded-xl">
-                <span className="text-lg md:text-xl lg:text-2xl font-light text-white">
-                  Shorten. Track. Scale.
-                </span>
-              </div>
-            </FadeIn>
-          </div>
+              ) : (
+                <a 
+                  href="#shorten" 
+                  className="px-8 py-3 rounded-full font-medium hover:bg-gray-100 transition-colors no-underline text-center"
+                  style={{ backgroundColor: '#ffffff', color: '#000000', boxShadow: '0 4px 15px rgba(255,255,255,0.25)' }}
+                >
+                  Shorten Now
+                </a>
+              )}
+              <Link to="/platform" className="liquid-glass border border-white/20 text-white px-8 py-3 rounded-full font-medium hover:bg-white hover:!text-black transition-colors no-underline text-center">
+                Explore Platform
+              </Link>
+            </div>
+          </FadeIn>
         </div>
       </section>
 
@@ -95,6 +99,10 @@ export default function Home() {
       <section 
         id="shorten" 
         className="relative w-full min-h-screen flex flex-col justify-center items-center px-6 md:px-12 lg:px-16"
+        style={{
+          paddingTop: '80px',
+          borderTop: '1px solid rgba(255,255,255,0.1)'
+        }}
       >
         <div 
           className="transference-panel w-full max-w-[800px] z-10 flex flex-col items-center"

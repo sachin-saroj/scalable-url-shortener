@@ -26,8 +26,12 @@ export default function AnimatedHeading({ text, className = "", style = {} }) {
           <span key={lineIndex} className="block" style={{ display: 'block' }}>
             {words.map((word, wordIndex) => {
               const chars = word.split('');
+              const cleanWord = word.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+              const wordColor = '#ffffff';
+              const textGlow = '0px 2px 12px rgba(0,0,0,0.7)';
+              
               return (
-                <span key={wordIndex} className="inline-block" style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>
+                <span key={wordIndex} className="inline-block" style={{ display: 'inline-block', whiteSpace: 'nowrap', color: wordColor, textShadow: textGlow }}>
                   {chars.map((char, charIndex) => {
                     const delay = (lineIndex * lineLength * charDelay) + (charGlobalIndex * charDelay);
                     charGlobalIndex++;
