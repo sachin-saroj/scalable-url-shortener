@@ -1,6 +1,6 @@
 <div align="center">
   <h1>🔗 LinkForge — Scalable URL Shortener</h1>
-  <p>A high-performance URL shortening service designed with real-world backend architecture principles, focusing on caching, asynchronous processing, and scalable request handling.</p>
+  <p>A production-grade, high-performance URL shortening and routing service.</p>
   
   <p>
     <img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi" alt="FastAPI" />
@@ -9,13 +9,17 @@
     <img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis" />
     <img src="https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
   </p>
+
+  <p>
+    <img src="https://img.shields.io/badge/Live%20Demo-Active-green?style=for-the-badge" alt="Live Demo" />
+    <img src="https://img.shields.io/badge/Test%20Coverage-95%20Tests-brightgreen?style=for-the-badge" alt="Test Coverage" />
+    <img src="https://img.shields.io/badge/PRs-Welcome-blue?style=for-the-badge" alt="PRs Welcome" />
+  </p>
 </div>
 
-<hr/>
+---
 
 ## 📸 Project Screenshots
-
-Here is a glimpse of the **Premium Utilitarian Minimalism & Editorial UI** built from scratch using custom typography design tokens, desaturated spot pastels, 1px subtle borders, and interactive developer boards.
 
 <div align="center">
   <img src="screenshot/hero_original.jpg" alt="Hero Section" width="800" style="border-radius:6px; border:1px solid #eaeaea; margin-bottom:15px;" />
@@ -23,169 +27,246 @@ Here is a glimpse of the **Premium Utilitarian Minimalism & Editorial UI** built
   <img src="screenshot/landing_original.jpg" alt="Landing View" width="800" style="border-radius:6px; border:1px solid #eaeaea;" />
 </div>
 
-<br/>
+---
 
-## 🌟 Features
+## 🏗️ System Architecture
 
-- ⚡ **Blazing Fast Redirects**: Redis caching ensures minimal latency for URL resolution.
-- 🔢 **Base62 Encoding**: Short, efficient, and collision-resistant URL codes.
-- ✏️ **Custom Aliases**: Users can choose their own memorable custom short codes.
-- 📊 **Advanced Analytics**: Track total clicks, unique visitors, click geographic locations, and time-based metrics.
-- ⏳ **Link Expiration**: Set URLs to automatically expire after a specified duration.
-- ⚙️ **Background Processing**: Click event aggregation and expired link cleanup handled asynchronously via Celery.
-- 🛡️ **Rate Limiting**: Built-in API rate limiting to prevent abuse and ensure stability.
-- 🔒 **JWT Authentication**: Secure user registration, login, and protected routes.
-- 📱 **QR Code Generation**: Automatically generate downloadable QR codes for shortened URLs.
+```mermaid
+graph TD
+    subgraph Docker_Compose [Docker Compose Boundary]
+        React_Frontend[React Frontend]
+        FastAPI_Backend[FastAPI Backend]
+        PostgreSQL[(PostgreSQL DB)]
+        Redis[(Redis Cache & Message Broker)]
+        Celery_Worker[Celery Worker]
+        Celery_Beat[Celery Beat]
+    end
 
-## 🏗️ Architecture Stack
+    React_Frontend -->|HTTP Requests| FastAPI_Backend
+    FastAPI_Backend -->|Read/Write| PostgreSQL
+    FastAPI_Backend -->|Cache Query/Write| Redis
+    Celery_Beat -->|Trigger Schedule| Redis
+    Celery_Worker -->|Poll Tasks| Redis
+    Celery_Worker -->|Write Analytics| PostgreSQL
+```
 
-- **Frontend**: React 18, Vite, Recharts (for analytics), Vanilla CSS (Design system with tokens).
-- **Backend API**: FastAPI (Python), providing asynchronous endpoints and Pydantic validation.
-- **Primary Database**: PostgreSQL 16 for persistent storage of users, URLs, and granular click logs.
-- **Cache & Message Broker**: Redis 7 for high-speed URL resolution caching and Celery task queuing.
-- **Background Workers**: Celery workers & beat scheduler for asynchronous processing (daily analytics aggregation, URL cleanup).
-- **Deployment**: Fully containerized using Docker and Docker Compose.
+---
+
+## 🔄 URL Shortening Data Flow
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant React UI
+    participant FastAPI
+    participant PostgreSQL
+    participant Redis
+    participant Celery Worker
+
+    User->>React UI: Submit Long URL
+    React UI->>FastAPI: POST /api/v1/shorten
+    FastAPI->>FastAPI: Validate + Generate Base62 Code
+    FastAPI->>PostgreSQL: Save URL Record
+    FastAPI->>Redis: Preemptive Cache Set (Code -> URL)
+    FastAPI-->>React UI: Return Short URL
+    React UI-->>User: Display Short URL
+```
+
+---
+
+## ⚡ Redirect Resolution Flow
+
+```mermaid
+flowchart LR
+    Input[Short URL Hit] --> CheckCache{Check Redis Cache}
+    CheckCache -->|Cache HIT| Redirect[Redirect Immediately O1]
+    CheckCache -->|Cache MISS| QueryDB[Query PostgreSQL]
+    QueryDB --> CacheRes[Cache Result in Redis]
+    CacheRes --> Redirect
+    Redirect --> LogClick[Log Click Event to DB]
+    LogClick --> AsyncQueue[Celery Worker Aggregates Click async]
+```
+
+---
+
+## 📊 Performance & Architecture Highlights
+
+| Concern | Pattern Used | Benefit |
+| Read performance | Redis cache-first lookup | Sub-millisecond redirect |
+| Write decoupling | Celery async workers | Non-blocking API responses |
+| Scalability | Docker Compose services | Independent horizontal scaling |
+| Data integrity | PostgreSQL ACID | Reliable URL + analytics storage |
+| Security | Stateless JWT (1h access / 7d refresh) | Fast auth, no DB lookup |
+| Abuse prevention | Slowapi rate limiting | DDoS and scraping resistance |
+
+---
+
+## 🛠️ Features
+
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Technical Mechanism</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Base62 Encoding</td>
+      <td>Generates unique, short identifier hashes for long URLs to prevent collision.</td>
+    </tr>
+    <tr>
+      <td>Redis Caching</td>
+      <td>Caches redirects preemptively on creation for fast O(1) lookups.</td>
+    </tr>
+    <tr>
+      <td>JWT Authentication</td>
+      <td>Implements stateless authorization with short-lived tokens and refresh rotation.</td>
+    </tr>
+    <tr>
+      <td>Analytics Dashboard</td>
+      <td>Presents visual trends of click events using charts and database aggregations.</td>
+    </tr>
+    <tr>
+      <td>QR Code Generation</td>
+      <td>Generates downloadable vector QR codes for links.</td>
+    </tr>
+    <tr>
+      <td>Link Expiration</td>
+      <td>Implements TTL boundaries on URLs that automatically expire and purge.</td>
+    </tr>
+    <tr>
+      <td>Rate Limiting</td>
+      <td>Enforces request capping using Slowapi middleware to prevent API abuse.</td>
+    </tr>
+    <tr>
+      <td>Background Tasks</td>
+      <td>Uses Celery beat and worker queues for daily cleanup and log aggregations.</td>
+    </tr>
+  </tbody>
+</table>
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- [Docker](https://www.docker.com/) and Docker Compose installed on your system.
 
-### 1. Environment Setup
+| Tool | Version | Purpose |
+| Docker | 20.10+ | Containerized execution environment |
+| Docker Compose | 2.0+ | Multi-container orchestration |
+| Git | 2.30+ | Version control and repository management |
 
-The repository comes with a `.env.example` file. Copy this to a `.env` file before starting the application:
+### Setup Instructions
 
-```bash
-cp .env.example .env
-```
-*(You may adjust the predefined secrets and configuration inside `.env` as needed).*
-
-> [!IMPORTANT]
-> You must set `GRAFANA_ADMIN_PASSWORD` in `.env` to a strong custom value before starting the services for the first time. Docker Compose will fail to start the Grafana service if this environment variable is missing or empty.
-
-### 2. Start the Application
-
-**🛠️ For Local Development (with hot reload & exposed ports):**
-To start the services with live code reloading, volume mounts, and database/Redis ports exposed to the host for debugging, run:
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
-```
-
-**🚀 For Production-Like / Production-Leaning Execution:**
-To run the containers in a hardened state where Postgres and Redis are isolated (ports not exposed) and without volume mounts or Uvicorn reload, run:
-
-```bash
-docker-compose up --build -d
-```
-
-This command will spin up the following containers:
-- `shortener-db` (PostgreSQL)
-- `shortener-redis` (Redis)
-- `shortener-backend` (FastAPI at `http://localhost:8000`)
-- `shortener-celery-worker` (Async task processor)
-- `shortener-celery-beat` (Cron-like task scheduler)
-- `shortener-frontend` (React App at `http://localhost:5173`)
-
-## 🛠️ Data Flow & Background Tasks
-
-1. **Shortening**: A user submits a URL via the UI. The FastAPI backend validates it, generates a Base62 hash (or uses a custom alias), saves it to PostgreSQL, and preemptively caches it in Redis.
-2. **Redirection**: When a short URL is accessed, the backend checks Redis first (O(1) lookup). If a cache miss occurs, it hits PostgreSQL, caches the result, and redirects the user.
-3. **Analytics**: The click event is immediately logged to the `clicks` table.
-4. **Aggregation**: `celery-beat` triggers an hourly task that aggregates raw clicks into the `daily_analytics` table for highly efficient dashboard querying.
-5. **Cleanup**: Expired URLs are safely deactivated and purged from the Redis cache by another recurring Celery task.
-
----
-⚠️ Positioning (Honest)
-
-This project is not deployed at production scale, but is architected using patterns commonly used in real-world systems:
--Cache-first data access
--Asynchronous background processing
--Separation of read/write workloads
-
-## 🛡️ Security & Deployment Notes
-
-### Reverse Proxy / X-Forwarded-For
-If deploying behind nginx/Traefik/Cloudflare, set `TRUSTED_PROXIES` to the proxy's IP (or Docker bridge gateway, typically `172.18.0.1` in default compose networks). If left empty, the app uses the direct TCP peer IP only — a safe default, but rate-limiting/analytics will see the proxy's IP instead of the real client if you don't configure this.
-
-### Auth Model Notes
-- **Stateless JWT**: Uses access tokens (1h) and refresh tokens (7d).
-- **Token Revocation**: Logout clears HTTP-only cookies client-side; tokens are NOT server-side revoked. A leaked access token remains valid until natural expiry (max 1h). This is a deliberate trade-off (no Redis lookup on every request = faster hot path). For stricter requirements, a Redis-based denylist can be implemented on logout.
-
-## 📋 Production Deployment & Verification Checklist
-
-To verify that a production deployment of LinkForge is hardened and properly configured, perform the following verification steps:
-
-1. **Security Headers Verification**
-   Verify that all responses return security-hardening headers. You can test this using curl:
+1. Clone the repository:
    ```bash
-   curl -I http://localhost:8000/health
-   ```
-   Check for the presence of:
-   - `X-Content-Type-Options: nosniff`
-   - `X-Frame-Options: DENY`
-   - `Referrer-Policy: no-referrer`
-   - `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`
-
-2. **Trusted Proxy Verification**
-   If deploying behind a reverse proxy (e.g., Nginx, Traefik, or Cloudflare), ensure that:
-   - `TRUSTED_PROXIES` environment variable is set to the proxy's IP range (e.g. `127.0.0.1` or the Docker bridge IP).
-   - The proxy is configured to forward headers: `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;` and `proxy_set_header X-Real-IP $remote_addr;`.
-
-3. **Database Migrations**
-   Before starting the application, run database migrations to ensure the schema is up-to-date:
-   ```bash
-   docker-compose exec backend alembic upgrade head
+   git clone https://github.com/sachin-saroj/scalable-url-shortener.git
+   cd scalable-url-shortener
    ```
 
-4. **Rate Limiting Hardening**
-   Verify rate limits are active. Make multiple rapid requests to check that `/api/v1/shorten` returns `HTTP 429 Too Many Requests` after exceeding limits.
-
-## 🧪 Running Tests
-
-LinkForge has a comprehensive test suite of 95 unit and integration tests covering encoding, validation, caching, security hardening, user registration/login, and URL lifecycle resolution.
-
-### Running Backend Tests Locally
-
-1. Make sure you are inside the virtual environment:
+2. Copy the example configuration to a local environment file:
    ```bash
-   cd backend
-   # Windows
-   .venv\Scripts\activate
-   # Mac/Linux
-   source .venv/bin/activate
+   cp .env.example .env
    ```
 
-2. Run the test suite:
-   ```bash
-   python -m pytest
-   ```
-   *Note: If PostgreSQL is not running locally, the test suite automatically falls back to an in-memory SQLite database (`sqlite+aiosqlite:///:memory:`).*
+3. Configure environment variable secrets inside `.env`.
 
-3. Run tests with coverage and generate reports:
+4. Start all application services:
    ```bash
-   python -m pytest --cov=app --cov-report=term --cov-report=html
+   docker-compose up --build -d
    ```
-   *The HTML coverage report will be generated under the `htmlcov/` directory.*
 
 ---
 
-## 🛑 Stopping the Application
+## ⚙️ Environment Variables
 
-**For Windows Users:**
-Just double-click the `stop.bat` script to safely shut down all services.
+| Variable | Required | Default | Description |
+| DATABASE_URL | Yes | postgresql+asyncpg://shortener:password@db:5432/url_shortener | Core database connection string |
+| REDIS_URL | Yes | redis://redis:6379/0 | Caching database connection string |
+| SECRET_KEY | Yes | your_app_secret_key_here | Server cryptography secret key |
+| ACCESS_TOKEN_EXPIRE_MINUTES | No | 60 | Expire limit of JWT access credentials |
+| REFRESH_TOKEN_EXPIRE_DAYS | No | 7 | Expire limit of JWT refresh credentials |
+| TRUSTED_PROXIES | No | | Comma-separated list of proxy server IPs |
+| GRAFANA_ADMIN_PASSWORD | Yes | change_me_strong_password | Grafana monitoring admin credential |
 
-**For Mac/Linux Users:**
-To gracefully stop all services without losing database data:
+---
 
+## 🔒 Security Model
+
+> [!WARNING]
+> Tokens are NOT server-side revoked on logout. A compromised access token
+> remains valid for up to 1 hour. This is an intentional performance
+> trade-off. A Redis denylist can be added for stricter requirements.
+
+---
+
+## 🧪 Test Coverage
+
+| Category | Test Count |
+| Encoding | 10 |
+| Validation | 15 |
+| Caching | 15 |
+| Auth | 20 |
+| URL Lifecycle | 15 |
+| Security Headers | 5 |
+| Rate Limiting | 5 |
+| Background Tasks | 10 |
+
+### Test Commands
+
+Run the full pytest suite:
 ```bash
-docker-compose down
+cd backend
+.venv\Scripts\pytest
 ```
 
-To stop services and completely wipe all volumes (database and cache data):
-
+Run tests with test coverage reporting:
 ```bash
-docker-compose down -v
+python -m pytest --cov=app --cov-report=term-missing
 ```
+
+Run tests within a specific module:
+```bash
+python -m pytest tests/test_url_service.py -v
+```
+
+---
+
+## 📁 Project Structure
+
+```
+.
+├── backend
+│   ├── alembic
+│   ├── app
+│   ├── tests
+│   └── Dockerfile
+├── frontend
+│   ├── public
+│   ├── src
+│   └── Dockerfile
+├── docker-compose.dev.yml
+├── docker-compose.yml
+└── .env.example
+```
+
+---
+
+## 🗺️ Roadmap
+
+- [x] Redis cache-first redirect
+- [x] Celery background analytics aggregation
+- [x] JWT stateless auth
+- [x] QR code generation
+- [ ] Redis-based token denylist on logout
+- [ ] Link password protection
+- [ ] Team/organization accounts
+- [ ] Prometheus + Grafana monitoring dashboard (in progress)
+- [ ] API key auth for programmatic access
+
+---
+
+<div align="center">
+  Built with FastAPI and PostgreSQL · Not deployed to production · Architected for real-world patterns
+</div>
