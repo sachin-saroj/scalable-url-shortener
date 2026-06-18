@@ -38,7 +38,8 @@ class TestExportFormatValidation:
 class TestCSVExport:
     """Test CSV generation logic."""
 
-    def test_csv_has_correct_headers(self):
+    @pytest.mark.asyncio
+    async def test_csv_has_correct_headers(self):
         """CSV output should have the expected column headers."""
         from app.api.v1.export import _export_csv
 
@@ -46,7 +47,7 @@ class TestCSVExport:
         response = _export_csv([])
         # Read the content from the streaming response body
         content = ""
-        for chunk in response.body_iterator:
+        async for chunk in response.body_iterator:
             content += chunk
 
         reader = csv.reader(io.StringIO(content))
@@ -80,13 +81,14 @@ class TestCSVExport:
 class TestJSONExport:
     """Test JSON generation logic."""
 
-    def test_json_empty_list(self):
+    @pytest.mark.asyncio
+    async def test_json_empty_list(self):
         """Empty URL list should export as empty JSON array."""
         from app.api.v1.export import _export_json
 
         response = _export_json([])
         content = ""
-        for chunk in response.body_iterator:
+        async for chunk in response.body_iterator:
             content += chunk
 
         data = json.loads(content)

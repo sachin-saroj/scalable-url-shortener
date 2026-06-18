@@ -63,6 +63,7 @@ alembic/versions/__pycache__/
 
 # Agents
 .agents/
+.claude/
 skills-lock.json
 .planning/
 

@@ -18,6 +18,8 @@
 Here is a glimpse of the **Premium Utilitarian Minimalism & Editorial UI** built from scratch using custom typography design tokens, desaturated spot pastels, 1px subtle borders, and interactive developer boards.
 
 <div align="center">
+  <img src="screenshot/banner.png" alt="LinkForge Banner" width="800" style="border-radius:6px; border:1px solid #eaeaea; margin-bottom:15px;" />
+  <br/>
   <img src="screenshot/landing.png" alt="Landing View" width="800" style="border-radius:6px; border:1px solid #eaeaea; margin-bottom:15px;" />
   <br/>
   <img src="screenshot/dashboard.png" alt="Dashboard View" width="800" style="border-radius:6px; border:1px solid #eaeaea;" />
