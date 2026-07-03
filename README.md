@@ -273,5 +273,6 @@ python -m pytest tests/test_url_service.py -v
 
 
 ## Changelog
+- **[#28]** Add fallback for Redis connectivity failure during startup
 - **[#26]** Add telemetry logs for Redis cache lookup hit/miss ratios
 - **[#24]** Validate custom slugs for invalid special characters
