@@ -270,3 +270,7 @@ python -m pytest tests/test_url_service.py -v
 <div align="center">
   Built with FastAPI and PostgreSQL · Not deployed to production · Architected for real-world patterns
 </div>
+
+
+## Changelog
+- **[#24]** Validate custom slugs for invalid special characters
