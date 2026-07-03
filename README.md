@@ -273,6 +273,7 @@ python -m pytest tests/test_url_service.py -v
 
 
 ## Changelog
+- **[#32]** Add unit test for custom slug collision retries
 - **[#30]** Correct footer Swagger docs URL navigation
 - **[#28]** Add fallback for Redis connectivity failure during startup
 - **[#26]** Add telemetry logs for Redis cache lookup hit/miss ratios
