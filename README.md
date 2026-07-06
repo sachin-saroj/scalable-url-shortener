@@ -273,6 +273,7 @@ python -m pytest tests/test_url_service.py -v
 
 
 ## Changelog
+- **[#52]** Enhance validation checks for settings routing (10)
 - **[#50]** Fix spelling typos in documentation (9)
 - **[#48]** Configure standard environment variables example (8)
 - **[#46]** Document Docker container layout setup (7)
