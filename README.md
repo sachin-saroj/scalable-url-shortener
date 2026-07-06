@@ -273,6 +273,7 @@ python -m pytest tests/test_url_service.py -v
 
 
 ## Changelog
+- **[#58]** Document security access control policies (13)
 - **[#56]** Format log output structures (12)
 - **[#54]** Improve button hover micro-interactions (11)
 - **[#52]** Enhance validation checks for settings routing (10)
