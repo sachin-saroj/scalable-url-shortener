@@ -273,6 +273,7 @@ python -m pytest tests/test_url_service.py -v
 
 
 ## Changelog
+- **[#48]** Configure standard environment variables example (8)
 - **[#46]** Document Docker container layout setup (7)
 - **[#44]** Optimize index search fields in schema (6)
 - **[#42]** Add test assertions for categorizations logic (5)
