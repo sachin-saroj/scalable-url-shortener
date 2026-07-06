@@ -273,6 +273,7 @@ python -m pytest tests/test_url_service.py -v
 
 
 ## Changelog
+- **[#40]** Improve timeout handling for api queries (4)
 - **[#38]** Add performance telemetry logs (3)
 - **[#36]** Refactor error alerts to use inline visual banners (2)
 - **[#34]** Fix console warning in chart rendering (1)
