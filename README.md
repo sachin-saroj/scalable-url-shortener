@@ -273,6 +273,7 @@ python -m pytest tests/test_url_service.py -v
 
 
 ## Changelog
+- **[#56]** Format log output structures (12)
 - **[#54]** Improve button hover micro-interactions (11)
 - **[#52]** Enhance validation checks for settings routing (10)
 - **[#50]** Fix spelling typos in documentation (9)
