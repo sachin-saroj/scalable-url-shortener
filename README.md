@@ -273,6 +273,7 @@ python -m pytest tests/test_url_service.py -v
 
 
 ## Changelog
+- **[#60]** Optimize fonts loading performance (14)
 - **[#58]** Document security access control policies (13)
 - **[#56]** Format log output structures (12)
 - **[#54]** Improve button hover micro-interactions (11)
