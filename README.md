@@ -273,6 +273,7 @@ python -m pytest tests/test_url_service.py -v
 
 
 ## Changelog
+- **[#34]** Fix console warning in chart rendering (1)
 - **[#32]** Add unit test for custom slug collision retries
 - **[#30]** Correct footer Swagger docs URL navigation
 - **[#28]** Add fallback for Redis connectivity failure during startup
